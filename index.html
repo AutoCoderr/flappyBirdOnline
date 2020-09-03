@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Flappybird online</title>
+</head>
+<body>
+	<h1>Flappybird online</h1>
+	<img id="level" width="1200" height="600">
+</body>
+</html>
+<script src="socket.io.js"></script>
+<script>
+	const socket = io.connect('http://' + location.hostname + ':' + location.port);
+
+	socket.on("updateLevel", function (url) {
+		document.getElementById("level").src = url;
+	});
+</script>
