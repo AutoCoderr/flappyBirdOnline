@@ -3,10 +3,22 @@
 <head>
 	<meta charset="UTF-8">
 	<title>Flappybird online</title>
+	<link rel="stylesheet" href="style.css">
 </head>
 <body>
 	<h1>Flappybird online</h1>
-	<img id="level" width="1200" height="600">
+	<div id="display_party">
+		<img id="level" width="1200" height="600">
+	</div>
+	<div id="login">
+		<h2>Veuillez choisir votre pseudo :</h2>
+		<input type="text" id="pseudo_input"/><br/>
+		<span id="error_login"></span>
+		<input type="button" id="login_button" value="Valider">
+	</div>
+	<div id="choose_party_type">
+		<input type="button" value="Lancer partie solo" id="single_party_button"/>
+	</div>
 </body>
 </html>
 <script src="socket.io.js"></script>
@@ -16,4 +28,38 @@
 	socket.on("updateLevel", function (url) {
 		document.getElementById("level").src = url;
 	});
+
+	socket.on("start_party", function () {
+		hide("choose_party_type");
+		display("display_party")
+	});
+
+	socket.on("login_successfull", function () {
+		hide("login");
+		display("choose_party_type");
+	});
+
+	onclick("login_button", function () {
+		if (document.getElementById("pseudo_input").value === "") {
+			document.getElementById("error_login").innerText = "Vous n'avez rien rentrez";
+			return;
+		}
+		socket.emit("login", document.getElementById("pseudo_input").value);
+	});
+
+	onclick("single_party_button", function () {
+		socket.emit("single_party");
+	});
+
+	function display(id) {
+		document.getElementById(id).style.display = "block";
+	}
+
+	function hide(id) {
+		document.getElementById(id).style.display = "none";
+	}
+
+	function onclick(id, callback) {
+		document.getElementById(id).onclick = callback;
+	}
 </script>

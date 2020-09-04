@@ -1,0 +1,11 @@
+#display_party {
+    display: none;
+}
+
+#choose_party_type {
+    display: none;
+}
+
+#error_login {
+    color: red;
+}

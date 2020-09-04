@@ -3,11 +3,21 @@ class Player {
 	pipePassed;
 	entity;
 	socket;
+	party;
+	pseudo;
 
-	constructor(entity) {
+	constructor(socket) {
 		this.life = 0;
 		this.pipePassed = 0;
-		this.setEntity(entity);
+		this.setSocket(socket);
+	}
+
+	setPseudo(pseudo) {
+		this.pseudo = pseudo;
+	}
+
+	setParty(party) {
+		this.party = party;
 	}
 
 	setEntity(entity) {
@@ -19,3 +29,5 @@ class Player {
 	}
 
 }
+
+module.exports = Player;

@@ -8,75 +8,10 @@ const graphismes = require("./graphismes"),
     display = graphismes.display,
     hide = graphismes.hide;
 
-const animations = require("./animations"),
+const animations = require("./Animations.class"),
     moveFromTo = animations.moveFromTo;
 
 const collisions = require("./collisions");
-
-let entities = {};
-
-function spawnEntitie(x,y,type,id = null,specificsParams = null) {
-    if (id != null && typeof(entities[id]) != "undefined") {
-        console.log("Entity already exist");
-        return;
-    } else {
-        id = 1;
-        while (typeof(entities[id]) != "undefined") {
-            id += 1;
-        }
-    }
-    entities[id] = {
-        id: id,
-        x: x,
-        y: y,
-        w: 0,
-        h: 0,
-        coefX: 0,
-        coefY: 0,
-        type: type,
-        exist: true,
-        timeout: null,
-        deplacing: false,
-        toDisplay: "default"
-    };
-    if (typeof(paramsEntities[type]) != "undefined") {
-        for (let key in paramsEntities[type]) {
-            entities[id][key] = paramsEntities[type][key];
-        }
-    }
-    if (specificsParams != null) {
-        for (let key in specificsParams) {
-            entities[id][key] = specificsParams[key];
-        }
-    }
-    let collisions = checkCollisions(entities[id]);
-    x = entities[id].x;
-    y = entities[id].y;
-    while (collisions !== false && (typeof(collisions.reaction) == "undefined" || collisions.reaction) && typeof(entities[id]) != "undefined") {
-        if (x <= 0 | x+entities[id].w >= widthCanvas | y <= 0 | y+entities[id].h >= heightCanvas) {
-            if (x+entities[id].w >= widthCanvas) {
-                x -= 5;
-            } else if (x <= 0) {
-                x += 5;
-            }
-            if (y <= 0) {
-                y += 5;
-            } else if (y+entities[id].h >= heightCanvas) {
-                y -= 5;
-            }
-        } else {
-            y += 5;
-            x -= 5;
-        }
-        entities[id].x = x;
-        entities[id].y = y;
-        collisions = checkCollisions(entities[id]);
-    }
-    if (typeof(entities[id]) != "undefined") {
-        display(entities[id]);
-    }
-    return id;
-}
 
 function removeEntitie(id) {
     if (typeof(entities[id]) == "undefined") {
