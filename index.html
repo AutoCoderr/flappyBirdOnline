@@ -10,7 +10,9 @@
 	<div id="display_party">
 		PV : <span id="life">0</span>
 		Tuyaux passés : <span id="pipes_passed">0</span>
-		<img id="level" width="1200" height="600">
+		<canvas id="canvas" style="width: 100%; height: 600px;">
+			<p>Désolé, votre navigateur ne supporte pas Canvas. Mettez-vous à jour</p>
+		</canvas>
 	</div>
 	<div id="login">
 		<h2>Veuillez choisir votre pseudo :</h2>
@@ -26,20 +28,32 @@
 </html>
 <script src="socket.io.js"></script>
 <script>
+	let canvas  = document.querySelector('#canvas');
+	let context = canvas.getContext('2d');
+
 	const socket = io.connect('http://' + location.hostname + ':' + location.port);
 
-	socket.on("updateLevel", function (url) {
-		document.getElementById("level").src = url;
+	socket.on("update_level", function (instructions) {
+		for (let i=0;i<instructions.length;i++) {
+			if (typeof(instructions[i].func) == "string" && typeof(instructions[i].args) == "object") {
+				context[instructions[i].func](...instructions[i].args);
+			} else if (typeof(instructions[i].key) == "string" && typeof(instructions[i].val) == "string") {
+				context[instructions[i].key] = instructions[i].val;
+			}
+		}
 	});
 
 	socket.on("start_party", function () {
 		hide("choose_party_type");
 		display("display_party")
+		context.clearRect(0, 0, canvas.width, canvas.height);
 	});
 
-	socket.on("login_successfull", function () {
+	socket.on("login_successfull", function (config) {
 		hide("login");
 		display("choose_party_type");
+		canvas.width = config.width;
+		canvas.height = config.height;
 	});
 
 	socket.on("display_msgs", function (data) {

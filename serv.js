@@ -115,7 +115,7 @@ io.sockets.on('connection', function (socket) {
 		player.setPseudo(pseudo+nb);
 		players[pseudo+nb] = player
 		socket.player = player;
-		socket.emit("login_successfull");
+		socket.emit("login_successfull", config);
 	});
 
 	socket.on('disconnect',function(){

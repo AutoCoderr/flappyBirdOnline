@@ -254,7 +254,6 @@ class Party {
 	}
 
 	flyBird(player) {
-		console.log("flyBird");
 		if (this.canPlay && !player.deplace) {
 			player.deplace = true;
 			const entity = player.entity;
@@ -272,7 +271,6 @@ class Party {
 	}
 
 	releaseBird(player) {
-		console.log("releaseBird");
 		if (this.canPlay && player.deplace) {
 			player.deplace = false;
 			const entity = player.entity;
@@ -283,7 +281,6 @@ class Party {
 	}
 
 	putPipes() {
-		console.log("putPipes");
 		const yPos = rand(heightCanvas/10+spaceBetweenTwoPipe,heightCanvas*0.9);
 		const idTuyauxA = this.spawnEntitie(widthCanvas-30,yPos,"pipe",null,{h: heightCanvas-yPos});
 		const idTuyauxB = this.spawnEntitie(widthCanvas-30,2,"pipeUpsideDown",null,{h: yPos-spaceBetweenTwoPipe});
@@ -296,9 +293,9 @@ class Party {
 		},2000);
 	}
 
-	sendCanvasToAllPlayers() {
+	broadcastCanvas(instructions) {
 		for (let i=0;i<this.players.length;i++) {
-			this.players[i].socket.emit("updateLevel", this.canvas.toDataURL());
+			this.players[i].socket.emit("update_level", instructions);
 		}
 	}
 }
