@@ -131,8 +131,24 @@ io.sockets.on('connection', function (socket) {
 		socket.emit("start_party");
 		let party = new Party();
 		party.addPlayer(socket.player);
-		socket.player.party = party;
+		socket.player.setParty(party);
 		party.spawnEntitie(config.width/5,config.height/2,"player",1);
+		socket.player.setEntity(party.entities[1]);
+		party.entities[1].player = socket.player;
+	});
+
+	socket.on("fly_bird", function () {
+		if (typeof(socket.player) == "undefined") {
+			return;
+		}
+		socket.player.party.flyBird(socket.player);
+	});
+
+	socket.on("release_bird", function () {
+		if (typeof(socket.player) == "undefined") {
+			return;
+		}
+		socket.player.party.releaseBird(socket.player);
 	});
 });
 

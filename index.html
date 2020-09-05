@@ -8,6 +8,8 @@
 <body>
 	<h1>Flappybird online</h1>
 	<div id="display_party">
+		PV : <span id="life">0</span>
+		Tuyaux passés : <span id="pipes_passed">0</span>
 		<img id="level" width="1200" height="600">
 	</div>
 	<div id="login">
@@ -19,6 +21,7 @@
 	<div id="choose_party_type">
 		<input type="button" value="Lancer partie solo" id="single_party_button"/>
 	</div>
+	<div id="msgs"></div>
 </body>
 </html>
 <script src="socket.io.js"></script>
@@ -39,6 +42,31 @@
 		display("choose_party_type");
 	});
 
+	socket.on("display_msgs", function (data) {
+		if (typeof(data.msgs) == "string") {
+			document.getElementById("msgs").innerHTML = "<span style='color: "+(data.type === "error" ? "red" : "green")+"'>"+data.msgs+"</span>";
+		} else if (typeof(data.msgs) == "object" && data.msgs instanceof Array) {
+			let str = "<ul>";
+			for (let i = 0; i < data.msgs.length; i++) {
+				str += "<li style='color: "+(data.type === "error" ? "red" : "green")+"'>" + data.msgs[i] + "</li>";
+			}
+			str += "</ul>";
+			document.getElementById("msgs").innerHTML = str;
+		}
+	});
+
+	socket.on("remove_msgs", function () {
+		document.getElementById("msgs").innerHTML = "";
+	});
+
+	socket.on("display_pipes_passed", function (nb) {
+		document.getElementById("pipes_passed").innerText = nb;
+	});
+
+	socket.on("display_life", function (pv) {
+		document.getElementById("life").innerText = pv;
+	});
+
 	onclick("login_button", function () {
 		if (document.getElementById("pseudo_input").value === "") {
 			document.getElementById("error_login").innerText = "Vous n'avez rien rentrez";
@@ -50,6 +78,20 @@
 	onclick("single_party_button", function () {
 		socket.emit("single_party");
 	});
+
+	document.onkeydown = function (){
+		switch (event.keyCode) {
+			case 32: // espace
+				socket.emit("fly_bird");
+		}
+	};
+
+	document.onkeyup = function (){
+		switch (event.keyCode) {
+			case 32: // espace
+				socket.emit("release_bird");
+		}
+	};
 
 	function display(id) {
 		document.getElementById(id).style.display = "block";

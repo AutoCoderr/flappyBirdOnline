@@ -1,15 +1,17 @@
 class Player {
 	life;
 	pipePassed;
+	deplace;
 	entity;
 	socket;
 	party;
 	pseudo;
 
 	constructor(socket) {
-		this.life = 0;
+		this.life = 5;
 		this.pipePassed = 0;
 		this.setSocket(socket);
+		this.deplace = false;
 	}
 
 	setPseudo(pseudo) {

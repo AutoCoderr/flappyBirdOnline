@@ -11,7 +11,7 @@ const graphismes = require("./graphismes"),
 const animations = require("./Animations.class"),
     moveFromTo = animations.moveFromTo;
 
-const collisions = require("./collisions");
+const collisions = require("./Collisions.class");
 
 function removeEntitie(id) {
     if (typeof(entities[id]) == "undefined") {

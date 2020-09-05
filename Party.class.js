@@ -1,7 +1,9 @@
 const { createCanvas } = require('canvas');
-const collisions = require("./collisions");
+const collisions = require("./Collisions.class");
 const Graphismes = require("./Graphismes.class");
 const Animations = require("./Animations.class");
+const Collisons = require("./Collisions.class");
+
 const config = require("./config"),
 	diffAire = config.diffAire,
 	spaceBetweenTwoPipe = config.spaceBetweenTwoPipe,
@@ -36,14 +38,19 @@ class Party {
 	entities;
 	graphismes;
 	animations;
+	collisions;
+	canPlay;
+	timeoutPutTuyaux;
 
 	constructor() {
 		this.players = [];
 		this.setCanvas(createCanvas(config.width, config.height));
 		this.firstStart = true;
 		this.entities = {};
+		this.canPlay = true;
 		this.graphismes = new Graphismes(this);
 		this.animations = new Animations(this);
+		this.collisions = new Collisons(this);
 	}
 
 	setCanvas(canvas) {
@@ -175,7 +182,7 @@ class Party {
 		if (entity.x <= 0 | entity.x+entity.w >= widthCanvas) {
 			if (typeof(collisions[entity.type]) != "undefined") {
 				if (typeof(collisions[entity.type].bord) != "undefined") {
-					const collision = collisions[entity.type].bord(entity,{pos: (entity.x <= 0 ? "gauche" : "droite")});
+					const collision = this.collisions.exec(entity,{type: "bord", pos: (entity.x <= 0 ? "gauche" : "droite")});
 					if (collision != null && collision !== false) return collision;
 				} else {
 					return {action: "stopEntity"};
@@ -186,7 +193,7 @@ class Party {
 		} else if (entity.y <= 0 | entity.y+entity.h >= heightCanvas) {
 			if (typeof(collisions[entity.type]) != "undefined") {
 				if (typeof(collisions[entity.type].bord) != "undefined") {
-					const collision = collisions[entity.type].bord(entity,{pos: (entity.y <= 0 ? "haut" : "bas")});
+					const collision = this.collisions.exec(entity,{type: "bord", pos: (entity.y <= 0 ? "haut" : "bas")});
 					if (collision != null && collision !== false) return collision;
 				} else {
 					return {action: "stopEntity"};
@@ -233,7 +240,7 @@ class Party {
 				) {
 					if (typeof(collisions[entity.type]) != "undefined") {
 						if (typeof(collisions[entity.type][otherEntity.type]) != "undefined") {
-							return collisions[entity.type][otherEntity.type](entity,otherEntity);
+							return this.collisions.exec(entity,otherEntity);
 						} else {
 							return true;
 						}
@@ -246,12 +253,58 @@ class Party {
 		return false;
 	}
 
+	flyBird(player) {
+		console.log("flyBird");
+		if (this.canPlay && !player.deplace) {
+			player.deplace = true;
+			const entity = player.entity;
+			this.stopEntitie(entity.id);
+			this.entities[1].toDisplay = "toUp";
+			this.moveEntitieTo(entity.id, entity.x,0,15*diffAire);
+			if (this.firstStart) {
+				player.socket.emit("remove_msgs");
+				player.pipePassed = 0;
+				player.socket.emit("display_pipes_passed", player.pipePassed)
+				this.firstStart = false;
+				//this.putPipes();
+			}
+		}
+	}
+
+	releaseBird(player) {
+		console.log("releaseBird");
+		if (this.canPlay && player.deplace) {
+			player.deplace = false;
+			const entity = player.entity;
+			this.stopEntitie(entity.id);
+			entity.toDisplay = "default";
+			this.moveEntitieTo(entity.id,entity.x,heightCanvas, 45 *diffAire, {to: 15*diffAire, before: 20});
+		}
+	}
+
+	putPipes() {
+		console.log("putPipes");
+		const yPos = rand(heightCanvas/10+spaceBetweenTwoPipe,heightCanvas*0.9);
+		const idTuyauxA = this.spawnEntitie(widthCanvas-30,yPos,"pipe",null,{h: heightCanvas-yPos});
+		const idTuyauxB = this.spawnEntitie(widthCanvas-30,2,"pipeUpsideDown",null,{h: yPos-spaceBetweenTwoPipe});
+		const idPipeDetector = this.spawnEntitie(widthCanvas-30,yPos-spaceBetweenTwoPipe+4,"pipeDetector");
+		this.moveEntitieTo(idTuyauxA,0,this.entities[idTuyauxA].y,20*diffAire);
+		this.moveEntitieTo(idTuyauxB,0,this.entities[idTuyauxB].y,20*diffAire);
+		this.moveEntitieTo(idPipeDetector,0,this.entities[idPipeDetector].y,20*diffAire);
+		this.timeoutPutTuyaux = setTimeout(() => {
+			this.putPipes();
+		},2000);
+	}
+
 	sendCanvasToAllPlayers() {
 		for (let i=0;i<this.players.length;i++) {
 			this.players[i].socket.emit("updateLevel", this.canvas.toDataURL());
 		}
 	}
+}
 
+function rand(a,b) {
+	return Math.round(a+Math.random()*(b-a));
 }
 
 module.exports = Party;
