@@ -8,7 +8,7 @@
 <body>
 	<h1>Flappybird online</h1>
 	<div id="display_party">
-		PV : <span id="life">0</span>
+		PV : <span id="life">0</span><br/>
 		Tuyaux passés : <span id="pipes_passed">0</span>
 		<canvas id="canvas" style="width: 100%; height: 600px;">
 			<p>Désolé, votre navigateur ne supporte pas Canvas. Mettez-vous à jour</p>
@@ -17,7 +17,7 @@
 	<div id="login">
 		<h2>Veuillez choisir votre pseudo :</h2>
 		<input type="text" id="pseudo_input"/><br/>
-		<span id="error_login"></span>
+		<span id="error_login"></span><br/>
 		<input type="button" id="login_button" value="Valider">
 	</div>
 	<div id="choose_party_type">
@@ -30,6 +30,8 @@
 <script>
 	let canvas  = document.querySelector('#canvas');
 	let context = canvas.getContext('2d');
+
+	const colorByMessageType = {"info": "green", "warning": "orange", "error": "red"};
 
 	const socket = io.connect('http://' + location.hostname + ':' + location.port);
 
@@ -56,13 +58,18 @@
 		canvas.height = config.height;
 	});
 
+	socket.on("stop_party", function () {
+		hide("choose_party_type");
+		display("choose_party_type");
+	});
+
 	socket.on("display_msgs", function (data) {
 		if (typeof(data.msgs) == "string") {
-			document.getElementById("msgs").innerHTML = "<span style='color: "+(data.type === "error" ? "red" : "green")+"'>"+data.msgs+"</span>";
+			document.getElementById("msgs").innerHTML = "<span style='color: "+colorByMessageType[data.type]+"'>"+data.msgs+"</span>";
 		} else if (typeof(data.msgs) == "object" && data.msgs instanceof Array) {
 			let str = "<ul>";
 			for (let i = 0; i < data.msgs.length; i++) {
-				str += "<li style='color: "+(data.type === "error" ? "red" : "green")+"'>" + data.msgs[i] + "</li>";
+				str += "<li style='color: "+colorByMessageType[data.type]+"'>" + data.msgs[i] + "</li>";
 			}
 			str += "</ul>";
 			document.getElementById("msgs").innerHTML = str;

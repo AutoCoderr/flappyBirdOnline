@@ -3,6 +3,7 @@ const collisions = require("./Collisions.class");
 const Graphismes = require("./Graphismes.class");
 const Animations = require("./Animations.class");
 const Collisons = require("./Collisions.class");
+const GenerateCanvasInstructions = require("./GenerateCanvasInstructions.class");
 
 const config = require("./config"),
 	diffAire = config.diffAire,
@@ -180,27 +181,11 @@ class Party {
 
 	checkCollisions(entity) {
 		if (entity.x <= 0 | entity.x+entity.w >= widthCanvas) {
-			if (typeof(collisions[entity.type]) != "undefined") {
-				if (typeof(collisions[entity.type].bord) != "undefined") {
-					const collision = this.collisions.exec(entity,{type: "bord", pos: (entity.x <= 0 ? "gauche" : "droite")});
-					if (collision != null && collision !== false) return collision;
-				} else {
-					return {action: "stopEntity"};
-				}
-			} else {
-				return {action: "stopEntity"};
-			}
+			const collision = this.collisions.exec(entity,{type: "bord", pos: (entity.x <= 0 ? "gauche" : "droite")});
+			if (collision != null && collision !== false) return collision;
 		} else if (entity.y <= 0 | entity.y+entity.h >= heightCanvas) {
-			if (typeof(collisions[entity.type]) != "undefined") {
-				if (typeof(collisions[entity.type].bord) != "undefined") {
-					const collision = this.collisions.exec(entity,{type: "bord", pos: (entity.y <= 0 ? "haut" : "bas")});
-					if (collision != null && collision !== false) return collision;
-				} else {
-					return {action: "stopEntity"};
-				}
-			} else {
-				return {action: "stopEntity"};
-			}
+			const collision = this.collisions.exec(entity,{type: "bord", pos: (entity.y <= 0 ? "haut" : "bas")});
+			if (collision != null && collision !== false) return collision;
 		}
 
 		let otherEntity;
@@ -238,15 +223,7 @@ class Party {
 						((entity.y < otherEntity.y & otherEntity.y+otherEntity.h < entity.y+entity.h) |
 							(otherEntity.y < entity.y & entity.y+entity.h < otherEntity.y+otherEntity.h)))
 				) {
-					if (typeof(collisions[entity.type]) != "undefined") {
-						if (typeof(collisions[entity.type][otherEntity.type]) != "undefined") {
-							return this.collisions.exec(entity,otherEntity);
-						} else {
-							return true;
-						}
-					} else {
-						return true;
-					}
+					return this.collisions.exec(entity,otherEntity);
 				}
 			}
 		}
@@ -265,7 +242,7 @@ class Party {
 				player.pipePassed = 0;
 				player.socket.emit("display_pipes_passed", player.pipePassed)
 				this.firstStart = false;
-				//this.putPipes();
+				this.putPipes();
 			}
 		}
 	}
@@ -296,6 +273,102 @@ class Party {
 	broadcastCanvas(instructions) {
 		for (let i=0;i<this.players.length;i++) {
 			this.players[i].socket.emit("update_level", instructions);
+		}
+	}
+
+	broadcastMsgs(msgs,type,exceptPlayers = null) {
+		for(let i=0;i<this.players.length;i++) {
+			let excepted = false;
+			if (exceptPlayers instanceof Array) {
+				for (let j = 0; j < exceptPlayers.length; j++) {
+					if (exceptPlayers[j].pseudo === this.players[i].pseudo) {
+						excepted = true;
+						break;
+					}
+				}
+			}
+			if (!excepted) {
+				this.players[i].socket.emit("display_msgs", {msgs, type});
+			}
+		}
+	}
+
+	stopParty() {
+		this.removeAllEntities()
+		for (let i=0;i<this.players.length;i++) {
+			this.players[i].socket.emit("stop_party");
+			this.players[i].party = null;
+			this.players[i].entity = null;
+			this.players[i].deplace = false;
+			this.players[i].pipePassed = 0;
+			this.players[i].life = 5;
+		}
+	}
+
+	writeBorder(pos = null) {
+		let context = new GenerateCanvasInstructions();
+		context.setStrokeStyle("black");
+		context.beginPath();
+		if (pos == null || pos === "haut") {
+			context.clearRect(-1,-1,widthCanvas+2,4);
+			context.moveTo(0,0);
+			context.lineTo(widthCanvas,0);
+		}
+		if (pos == null || pos === "bas") {
+			context.clearRect(-1,heightCanvas-1,widthCanvas+2,4);
+			context.moveTo(0,heightCanvas);
+			context.lineTo(widthCanvas,heightCanvas);
+		}
+		if (pos == null || pos === "gauche") {
+			context.clearRect(-1,-1,4,heightCanvas+2);
+			context.moveTo(0,0);
+			context.lineTo(0,heightCanvas);
+		}
+		if (pos == null || pos === "droite") {
+			context.clearRect(widthCanvas-1,-1,4,heightCanvas+2);
+			context.moveTo(widthCanvas,0);
+			context.lineTo(widthCanvas,heightCanvas);
+		}
+		context.stroke();
+		this.broadcastCanvas(context.instructions);
+	}
+
+	lostPV(player) {
+		let entity = player.entity;
+		entity.toDisplay = "default";
+		this.canPlay = false;
+		player.life -= 1;
+		player.socket.emit("display_life", player.life);
+		if (player.life > 0) {
+			player.socket.emit("display_msgs", {type: "warning", msgs: "Vous avez perdu une vie"});
+			this.broadcastMsgs(player.pseudo+" a perdu une vie", "warning", [player]);
+		} else {
+			this.players.sort((a,b) => b.life - a.life);
+			for (let i=0;i<this.players.length;i++) {
+				this.players[i].socket.emit("display_msgs", {msgs: "Partie terminée, vous êtes numéro "+(i + 1), type: "warning"});
+			}
+		}
+		for (let i=0;i<this.players.length;i++) {
+			this.teleportEntitieTo(this.players[i].entity.id, widthCanvas / 5, heightCanvas / 2);
+		}
+		clearInterval(this.timeoutPutTuyaux);
+		this.timeoutPutTuyaux = null;
+		this.deleteAllPipes();
+		this.writeBorder();
+		if (player.life > 0) {
+			setTimeout(() => {
+				this.canPlay = true;
+				this.firstStart = true;
+			}, 500);
+		}
+		return {action: "stopAnime"};
+	}
+
+	deleteAllPipes() {
+		for (let id in this.entities) {
+			if (this.entities[id].type === "pipe" || this.entities[id].type === "pipeUpsideDown" || this.entities[id].type === "pipeDetector") {
+				this.removeEntitie(id);
+			}
 		}
 	}
 }

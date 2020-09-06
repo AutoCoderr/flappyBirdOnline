@@ -8,14 +8,14 @@ const collisions = {
                 }, 100);
                 return {action: "stopEntity"};
             } else if (bord.pos === "bas") {
-                return lostPV();
+                return party.lostPV(player.player);
             }
         },
         tuyaux: function (player, tuyaux, party) {
-            return lostPV();
+            return party.lostPV(player.player);
         },
         tuyauxUpsideDown: function (player, tuyaux, party) {
-            return lostPV();
+            return party.lostPV(player.player);
         },
         pipeDetector: function(player,pipeDetector, party) {
             if (!pipeDetector.alreadyCounted) {
@@ -28,7 +28,7 @@ const collisions = {
     },
     pipe: {
         player: function(pipe,player,party){
-            return lostPV();
+            return party.lostPV(player.player);
         },
         bord: function(pipe,bord,party) {
             if (bord.pos === "gauche") {
@@ -55,11 +55,14 @@ const collisions = {
                 pipeDetector.alreadyCounted = true;
             }
             return false;
+        },
+        pipe: function (pipeDetector,pipe,party) {
+            return false;
         }
     },
     pipeUpsideDown: {
         player: function(pipe,player,party){
-            return lostPV();
+            return party.lostPV(player.player);
         },
         bord: function(pipe,bord,party) {
             if (bord.pos === "gauche") {
@@ -81,7 +84,12 @@ class Collisions {
     }
 
     exec(entityA, entityB) {
-        return collisions[entityA.type][entityB.type](entityA,entityB,this.party);
+        if (typeof(collisions[entityA.type]) != "undefined") {
+            if (typeof(collisions[entityA.type][entityB.type]) != "undefined") {
+                return collisions[entityA.type][entityB.type](entityA,entityB,this.party);
+            }
+        }
+        return true;
     }
 
     setParty(party) {

@@ -120,6 +120,7 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('disconnect',function(){
 		if (typeof(socket.player) != "undefined") {
+			socket.player.party.stopParty();
 			delete players[socket.player.pseudo];
 		}
 	});
@@ -133,6 +134,7 @@ io.sockets.on('connection', function (socket) {
 		party.addPlayer(socket.player);
 		socket.player.setParty(party);
 		party.spawnEntitie(config.width/5,config.height/2,"player",1);
+		party.writeBorder();
 		socket.player.setEntity(party.entities[1]);
 		party.entities[1].player = socket.player;
 	});

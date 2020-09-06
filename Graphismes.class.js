@@ -144,12 +144,12 @@ const formes = {
 		display: {
 			default: function (id = "canvas", entity, context) {
 				// Do nothing
-				// Entity is not visible
+				// This element is invisible
 			}
 		},
 		remove: function (id = "canvas", entity, context) {
 			// Do nothing
-			// Entity is not visible
+			// This element is invisible
 		}
 	}
 };
