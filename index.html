@@ -6,24 +6,38 @@
 	<link rel="stylesheet" href="style.css">
 </head>
 <body>
-	<h1>Flappybird online</h1>
-	<div id="display_party">
-		PV : <span id="life">0</span><br/>
-		Tuyaux passés : <span id="pipes_passed">0</span>
-		<canvas id="canvas" style="width: 100%; height: 600px;">
-			<p>Désolé, votre navigateur ne supporte pas Canvas. Mettez-vous à jour</p>
-		</canvas>
-	</div>
-	<div id="login">
-		<h2>Veuillez choisir votre pseudo :</h2>
-		<input type="text" id="pseudo_input"/><br/>
-		<span id="error_login"></span><br/>
-		<input type="button" id="login_button" value="Valider">
-	</div>
-	<div id="choose_party_type">
-		<input type="button" value="Lancer partie solo" id="single_party_button"/>
-	</div>
-	<div id="msgs"></div>
+	<main>
+		<h1>Flappybird online</h1>
+		<div id="display_party">
+			PV : <span id="life">5</span><br/>
+			Tuyaux passés : <span id="pipes_passed">0</span>
+			<canvas id="canvas" style="width: 100%; height: 600px;">
+				<p>Désolé, votre navigateur ne supporte pas Canvas. Mettez-vous à jour</p>
+			</canvas>
+		</div>
+		<input id="go_to_menu_button" value="Retourner au menu" type="button"/>
+		<div id="login">
+			<h2>Veuillez choisir votre pseudo :</h2>
+			<input type="text" id="pseudo_input"/><br/>
+			<span id="error_login"></span><br/>
+			<input type="button" id="login_button" value="Valider">
+		</div>
+		<div id="choose_party_type">
+			<input type="button" value="Lancer partie solo" id="single_party_button"/><br/>
+			<input type="button" value="Créer partie" id="create_party_button"/><br/>
+			<input type="button" value="Rejoindre partie" id="list_party_button"/>
+		</div>
+		<div id="prepare_party">
+			<h2>En attente de joueurs</h2>
+			<h3 id="admin_party"></h3>
+			<ul id="list_players_party"></ul>
+		</div>
+		<div id="list_parties">
+			<h2>Liste des parties :</h2>
+			<ul></ul>
+		</div>
+		<div id="msgs"></div>
+	</main>
 </body>
 </html>
 <script src="socket.io.js"></script>
@@ -46,8 +60,10 @@
 	});
 
 	socket.on("start_party", function () {
+		hide("go_to_menu_button");
 		hide("choose_party_type");
-		display("display_party")
+		hide("prepare_party");
+		display("display_party");
 		context.clearRect(0, 0, canvas.width, canvas.height);
 	});
 
@@ -88,9 +104,32 @@
 		document.getElementById("life").innerText = pv;
 	});
 
+	socket.on("display_party_players", function (data) {
+		document.getElementById("admin_party").innerText = "Admin de cette partie : "+data.admin;
+		let liste = "";
+		for (let i=0;i<data.players.length;i++) {
+			liste += "<li>"+data.players[i]+"</li>";
+		}
+		document.getElementById("list_players_party").innerHTML = liste;
+	});
+
+	socket.on("display_parties", function(parties) {
+		let ul = document.querySelector("#list_parties ul");
+		let liste = "";
+		if (parties.length > 0) {
+			for (let i = 0; i < parties.length; i++) {
+				liste += "<li>Partie de " + parties[i].admin + " (" + parties[i].nbPlayers + " joueur(s)) "+
+						"<input type='button' value='Rejoindre' onclick='join_party(`"+parties[i].admin+"`)' /></li>";
+			}
+		} else {
+			liste = "<span style='color: orange;'>Il n'y a aucune partie</span>";
+		}
+		ul.innerHTML = liste;
+	});
+
 	onclick("login_button", function () {
 		if (document.getElementById("pseudo_input").value === "") {
-			document.getElementById("error_login").innerText = "Vous n'avez rien rentrez";
+			document.getElementById("error_login").innerText = "Vous n'avez rien rentré";
 			return;
 		}
 		socket.emit("login", document.getElementById("pseudo_input").value);
@@ -99,6 +138,32 @@
 	onclick("single_party_button", function () {
 		socket.emit("single_party");
 	});
+
+	onclick("create_party_button", function () {
+		display("prepare_party");
+		hide("choose_party_type");
+		socket.emit("create_party");
+	});
+
+	onclick("list_party_button", function () {
+		display("go_to_menu_button");
+		display("list_parties");
+		hide("choose_party_type");
+		socket.emit("get_parties");
+	});
+
+	onclick("go_to_menu_button", function () {
+		hide("go_to_menu_button");
+		hide("list_parties");
+		display("choose_party_type");
+	});
+
+	function join_party(admin_of_party) {
+		hide("list_parties");
+		hide("go_to_menu_button");
+		display("prepare_party");
+		socket.emit("join_party", admin_of_party);
+	}
 
 	document.onkeydown = function (){
 		switch (event.keyCode) {

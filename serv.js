@@ -6,6 +6,7 @@ const Party = require("./Party.class"),
 	Player = require("./Player.class");
 
 let players = {};
+let parties = [];
 
 const mime_per_extention = {
 	"css": "text/css",
@@ -119,9 +120,49 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.on('disconnect',function(){
-		if (typeof(socket.player) != "undefined") {
+		if (typeof(socket.player) != "undefined" && socket.player.party != null) {
 			socket.player.party.stopParty();
 			delete players[socket.player.pseudo];
+		}
+	});
+
+	socket.on("create_party", function () {
+		if (typeof(socket.player) == "undefined" || socket.player.party != null) {
+			return;
+		}
+		let party = new Party(socket.player);
+		parties.push(party);
+		socket.player.party = party;
+		socket.emit("display_party_players", {admin: socket.player.pseudo, players: []});
+	});
+
+	socket.on("get_parties", function () {
+		if (typeof(socket.player) == "undefined" || socket.player.party != null) {
+			return;
+		}
+		let partyList = [];
+		for (let i=0;i<parties.length;i++) {
+			if (!parties[i].started) {
+				partyList.push({admin: parties[i].admin.pseudo, nbPlayers: parties[i].players.length+1});
+			}
+		}
+		socket.emit("display_parties", partyList);
+	});
+
+	socket.on("join_party", function (adminPseudo) {
+		if (typeof(socket.player) == "undefined" || socket.player.party != null) {
+			return;
+		}
+		for (let i=0;i<parties.length;i++) {
+			if (parties[i].admin.pseudo === adminPseudo) {
+				let party = parties[i];
+				party.addPlayer(socket.player);
+				let party_players = party.getPseudoList();
+				socket.player.party = party;
+				party.broadcastSomethings((player) => {
+					player.socket.emit("display_party_players", {admin: party.admin.pseudo, players: party_players});
+				});
+			}
 		}
 	});
 
@@ -130,8 +171,9 @@ io.sockets.on('connection', function (socket) {
 			return;
 		}
 		socket.emit("start_party");
-		let party = new Party();
-		party.addPlayer(socket.player);
+		let party = new Party(socket.player);
+		party.started = true;
+		parties.push(party);
 		socket.player.setParty(party);
 		party.spawnEntitie(config.width/5,config.height/2,"player",1);
 		party.writeBorder();

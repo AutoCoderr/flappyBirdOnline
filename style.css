@@ -1,8 +1,15 @@
-#display_party {
+#display_party, #choose_party_type, #prepare_party, #list_parties {
     display: none;
 }
 
-#choose_party_type {
+main {
+    text-align: center;
+}
+
+#go_to_menu_button {
+    position: absolute;
+    top: 5%;
+    left: 5%;
     display: none;
 }
 

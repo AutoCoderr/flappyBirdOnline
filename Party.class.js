@@ -42,16 +42,24 @@ class Party {
 	collisions;
 	canPlay;
 	timeoutPutTuyaux;
+	started;
+	admin;
 
-	constructor() {
+	constructor(admin) {
 		this.players = [];
 		this.setCanvas(createCanvas(config.width, config.height));
+		this.setAdmin(admin);
 		this.firstStart = true;
 		this.entities = {};
 		this.canPlay = true;
+		this.started = false;
 		this.graphismes = new Graphismes(this);
 		this.animations = new Animations(this);
 		this.collisions = new Collisons(this);
+	}
+
+	setAdmin(admin) {
+		this.admin = admin;
 	}
 
 	setCanvas(canvas) {
@@ -231,7 +239,7 @@ class Party {
 	}
 
 	flyBird(player) {
-		if (this.canPlay && !player.deplace) {
+		if (this.canPlay && !player.deplace && this.started) {
 			player.deplace = true;
 			const entity = player.entity;
 			this.stopEntitie(entity.id);
@@ -248,7 +256,7 @@ class Party {
 	}
 
 	releaseBird(player) {
-		if (this.canPlay && player.deplace) {
+		if (this.canPlay && player.deplace && this.started) {
 			player.deplace = false;
 			const entity = player.entity;
 			this.stopEntitie(entity.id);
@@ -271,12 +279,18 @@ class Party {
 	}
 
 	broadcastCanvas(instructions) {
-		for (let i=0;i<this.players.length;i++) {
-			this.players[i].socket.emit("update_level", instructions);
-		}
+		this.broadcastSomethings((player) => {
+			player.socket.emit("update_level", instructions);
+		});
 	}
 
-	broadcastMsgs(msgs,type,exceptPlayers = null) {
+	broadcastMsgs(msgs, type, exceptPlayers) {
+		this.broadcastSomethings((player) => {
+			player.socket.emit("display_msgs", {type, msgs});
+		}, exceptPlayers);
+	}
+
+	broadcastSomethings(callback, exceptPlayers = null) {
 		for(let i=0;i<this.players.length;i++) {
 			let excepted = false;
 			if (exceptPlayers instanceof Array) {
@@ -288,8 +302,20 @@ class Party {
 				}
 			}
 			if (!excepted) {
-				this.players[i].socket.emit("display_msgs", {msgs, type});
+				callback(this.players[i]);
 			}
+		}
+		let excepted = false;
+		if (exceptPlayers instanceof Array) {
+			for (let j = 0; j < exceptPlayers.length; j++) {
+				if (exceptPlayers[j].pseudo === this.admin.pseudo) {
+					excepted = true;
+					break;
+				}
+			}
+		}
+		if (!excepted) {
+			callback(this.admin);
 		}
 	}
 
@@ -344,13 +370,16 @@ class Party {
 			this.broadcastMsgs(player.pseudo+" a perdu une vie", "warning", [player]);
 		} else {
 			this.players.sort((a,b) => b.life - a.life);
-			for (let i=0;i<this.players.length;i++) {
-				this.players[i].socket.emit("display_msgs", {msgs: "Partie terminée, vous êtes numéro "+(i + 1), type: "warning"});
-			}
+			let nb = 1;
+			this.broadcastSomethings((aPlayer) => {
+				aPlayer.socket.emit("display_msgs", {msgs: "Partie terminée, vous êtes numéro "+nb, type: "warning"});
+				nb += 1;
+			});
+
 		}
-		for (let i=0;i<this.players.length;i++) {
-			this.teleportEntitieTo(this.players[i].entity.id, widthCanvas / 5, heightCanvas / 2);
-		}
+		this.broadcastSomethings((aPlayer) => {
+			this.teleportEntitieTo(aPlayer.entity.id, widthCanvas / 5, heightCanvas / 2);
+		});
 		clearInterval(this.timeoutPutTuyaux);
 		this.timeoutPutTuyaux = null;
 		this.deleteAllPipes();
@@ -370,6 +399,14 @@ class Party {
 				this.removeEntitie(id);
 			}
 		}
+	}
+
+	getPseudoList() {
+		let pseudos = [];
+		for (let i=0;i<this.players.length;i++) {
+			pseudos.push(this.players[i].pseudo);
+		}
+		return pseudos;
 	}
 }
 
