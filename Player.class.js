@@ -1,3 +1,5 @@
+const config = require("./config");
+
 class Player {
 	life;
 	pipePassed;
@@ -8,7 +10,7 @@ class Player {
 	pseudo;
 
 	constructor(socket) {
-		this.life = 5;
+		this.life = config.lifePerPlayer;
 		this.pipePassed = 0;
 		this.setSocket(socket);
 		this.deplace = false;

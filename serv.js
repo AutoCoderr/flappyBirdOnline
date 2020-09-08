@@ -114,14 +114,18 @@ io.sockets.on('connection', function (socket) {
 		}
 		let player = new Player(socket);
 		player.setPseudo(pseudo+nb);
-		players[pseudo+nb] = player
+		players[pseudo+nb] = player;
 		socket.player = player;
 		socket.emit("login_successfull", config);
 	});
 
 	socket.on('disconnect',function(){
 		if (typeof(socket.player) != "undefined" && socket.player.party != null) {
-			socket.player.party.stopParty();
+			if (socket.player.pseudo === socket.player.party.admin.pseudo) {
+				removeParty(socket.player.party);
+				displayAllParties(socket.broadcast);
+			}
+			socket.player.party.stopParty(socket.player);
 			delete players[socket.player.pseudo];
 		}
 	});
@@ -134,19 +138,14 @@ io.sockets.on('connection', function (socket) {
 		parties.push(party);
 		socket.player.party = party;
 		socket.emit("display_party_players", {admin: socket.player.pseudo, players: []});
+		displayAllParties(socket.broadcast);
 	});
 
 	socket.on("get_parties", function () {
 		if (typeof(socket.player) == "undefined" || socket.player.party != null) {
 			return;
 		}
-		let partyList = [];
-		for (let i=0;i<parties.length;i++) {
-			if (!parties[i].started) {
-				partyList.push({admin: parties[i].admin.pseudo, nbPlayers: parties[i].players.length+1});
-			}
-		}
-		socket.emit("display_parties", partyList);
+		displayAllParties(socket);
 	});
 
 	socket.on("join_party", function (adminPseudo) {
@@ -175,6 +174,7 @@ io.sockets.on('connection', function (socket) {
 		party.started = true;
 		parties.push(party);
 		socket.player.setParty(party);
+		socket.emit("display_life", socket.player.life);
 		party.spawnEntitie(config.width/5,config.height/2,"player",1);
 		party.writeBorder();
 		socket.player.setEntity(party.entities[1]);
@@ -195,5 +195,25 @@ io.sockets.on('connection', function (socket) {
 		socket.player.party.releaseBird(socket.player);
 	});
 });
+
+function removeParty(party) {
+	for (let i=0;i<parties.length;i++) {
+		if (party.admin.pseudo === parties[i].admin.pseudo) {
+			parties.splice(i,1);
+			return true;
+		}
+	}
+	return false;
+}
+
+function displayAllParties(socket) {
+	let partyList = [];
+	for (let i=0;i<parties.length;i++) {
+		if (!parties[i].started) {
+			partyList.push({admin: parties[i].admin.pseudo, nbPlayers: parties[i].players.length+1});
+		}
+	}
+	socket.emit("display_parties", partyList);
+}
 
 server.listen(3005);

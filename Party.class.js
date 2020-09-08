@@ -69,9 +69,21 @@ class Party {
 	setPlayers(players) {
 		this.players = players;
 	}
+
 	addPlayer(player) {
 		this.players.push(player);
 	}
+
+	removePlayer(player) {
+		for (let i=0;i<this.players.length;i++) {
+			if (this.players[i].pseudo === player.pseudo) {
+				this.players.splice(i,1);
+				return true;
+			}
+		}
+		return false;
+	}
+
 
 	spawnEntitie(x,y,type,id = null,specificsParams = null) {
 		if (id != null && typeof(this.entities[id]) != "undefined") {
@@ -319,15 +331,22 @@ class Party {
 		}
 	}
 
-	stopParty() {
-		this.removeAllEntities()
-		for (let i=0;i<this.players.length;i++) {
-			this.players[i].socket.emit("stop_party");
-			this.players[i].party = null;
-			this.players[i].entity = null;
-			this.players[i].deplace = false;
-			this.players[i].pipePassed = 0;
-			this.players[i].life = 5;
+	stopParty(player) {
+		if (player.pseudo === this.admin.pseudo) {
+			this.broadcastSomethings((aPlayer) => {
+				aPlayer.socket.emit("stop_party");
+				aPlayer.party = null;
+				aPlayer.entity = null;
+				aPlayer.deplace = false;
+				aPlayer.pipePassed = 0;
+				aPlayer.life = config.lifePerPlayer;
+			});
+		} else {
+			this.removePlayer(player);
+			let party_players = this.getPseudoList();
+			this.broadcastSomethings((player) => {
+				player.socket.emit("display_party_players", {admin: this.admin.pseudo, players: party_players});
+			});
 		}
 	}
 
