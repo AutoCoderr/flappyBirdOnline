@@ -24,6 +24,9 @@ const collisions = {
                 pipeDetector.alreadyCounted = true;
             }
             return false;
+        },
+        player: function (playerA, playerB) {
+            return false;
         }
     },
     pipe: {

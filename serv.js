@@ -167,6 +167,36 @@ io.sockets.on('connection', function (socket) {
 		}
 	});
 
+	socket.on("start_party", function () {
+		if (typeof(socket.player) != "undefined" && socket.player.party != null) {
+			let party = socket.player.party;
+			if (party.admin.pseudo !== socket.player.pseudo) {
+				socket.emit("display_msgs", {type: "error", msgs: "Vous n'êtes pas l'admin de cette partie"});
+				return;
+			}
+			if (party.started) {
+				socket.emit("display_msgs", {type: "error", msgs: "Votre partie est déjà en cours"});
+				return;
+			}
+			if (party.players.length === 0) {
+				socket.emit("display_msgs", {type: "error", msgs: "Vous êtes encore seul dans cette partie"});
+				return;
+			}
+			party.started = true;
+			const heightPerPlayer = 20;
+			let nb = 0;
+			party.broadcastSomethings((player) => {
+				player.socket.emit("start_party");
+				player.socket.emit("display_life", player.life);
+				const id = party.spawnEntitie(config.width/5,(config.height/2) + heightPerPlayer*(party.players.length+1)/2 - nb*heightPerPlayer, "player");
+				let entity = party.entities[id];
+				player.setEntity(entity);
+				entity.player = player;
+				nb += 1;
+			});
+		}
+	});
+
 	socket.on("single_party", function () {
 		if (typeof(socket.player) == "undefined" || socket.player.party != null) {
 			return;
