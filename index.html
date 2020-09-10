@@ -31,6 +31,7 @@
 			<h2>En attente de joueurs</h2>
 			<h3 id="admin_party"></h3>
 			<ul id="list_players_party"></ul>
+			<input type="button" value="Quitter" id="quit_party_button"/>
 		</div>
 		<div id="list_parties">
 			<h2>Liste des parties :</h2>
@@ -157,6 +158,15 @@
 		hide("go_to_menu_button");
 		hide("list_parties");
 		display("choose_party_type");
+	});
+
+	onclick("quit_party_button", function () {
+		if (confirm("Voulez vous quitter cette partie?")) {
+			hide("prepare_party");
+			display("list_parties");
+			socket.emit("quit_party");
+			socket.emit("get_parties");
+		}
 	});
 
 	function join_party(admin_of_party) {

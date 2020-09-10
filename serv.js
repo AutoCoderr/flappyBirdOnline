@@ -121,12 +121,14 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('disconnect',function(){
 		if (typeof(socket.player) != "undefined" && socket.player.party != null) {
-			if (socket.player.pseudo === socket.player.party.admin.pseudo) {
-				removeParty(socket.player.party);
-				displayAllParties(socket.broadcast);
-			}
-			socket.player.party.stopParty(socket.player);
+			quitParty(socket);
 			delete players[socket.player.pseudo];
+		}
+	});
+
+	socket.on("quit_party", function () {
+		if (typeof(socket.player) != "undefined" && socket.player.party != null) {
+			quitParty(socket);
 		}
 	});
 
@@ -214,6 +216,14 @@ function displayAllParties(socket) {
 		}
 	}
 	socket.emit("display_parties", partyList);
+}
+
+function quitParty(socket) {
+	if (socket.player.pseudo === socket.player.party.admin.pseudo) {
+		removeParty(socket.player.party);
+		displayAllParties(socket.broadcast);
+	}
+	socket.player.party.stopParty(socket.player);
 }
 
 server.listen(3005);

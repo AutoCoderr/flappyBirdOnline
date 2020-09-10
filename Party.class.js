@@ -260,7 +260,7 @@ class Party {
 			if (this.firstStart) {
 				player.socket.emit("remove_msgs");
 				player.pipePassed = 0;
-				player.socket.emit("display_pipes_passed", player.pipePassed)
+				player.socket.emit("display_pipes_passed", player.pipePassed);
 				this.firstStart = false;
 				this.putPipes();
 			}
@@ -342,6 +342,11 @@ class Party {
 				aPlayer.life = config.lifePerPlayer;
 			});
 		} else {
+			player.party = null;
+			player.entity = null;
+			player.deplace = false;
+			player.pipePassed = 0;
+			player.life = config.lifePerPlayer;
 			this.removePlayer(player);
 			let party_players = this.getPseudoList();
 			this.broadcastSomethings((player) => {
