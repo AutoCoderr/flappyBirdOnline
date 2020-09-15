@@ -84,31 +84,31 @@
 
 	socket.on("display_msgs", function (data) {
 		if (typeof(data.msgs) == "string") {
-			document.getElementById("msgs").innerHTML = "<span style='color: "+colorByMessageType[data.type]+"'>"+data.msgs+"</span>";
+			setHtml("msgs", "<span style='color: "+colorByMessageType[data.type]+"'>"+data.msgs+"</span>");
 		} else if (typeof(data.msgs) == "object" && data.msgs instanceof Array) {
 			let str = "<ul>";
 			for (let i = 0; i < data.msgs.length; i++) {
 				str += "<li style='color: "+colorByMessageType[data.type]+"'>" + data.msgs[i] + "</li>";
 			}
 			str += "</ul>";
-			document.getElementById("msgs").innerHTML = str;
+			setHtml("msgs", str);
 		}
 	});
 
 	socket.on("remove_msgs", function () {
-		document.getElementById("msgs").innerHTML = "";
+		setHtml("msgs", "");
 	});
 
 	socket.on("display_pipes_passed", function (nb) {
-		document.getElementById("pipes_passed").innerText = nb;
+		setText("pipes_passed", nb)
 	});
 
 	socket.on("display_life", function (pv) {
-		document.getElementById("life").innerText = pv;
+		setText("life", pv)
 	});
 
 	socket.on("display_party_players", function (data) {
-		document.getElementById("admin_party").innerText = "Admin de cette partie : "+data.admin;
+		setText("admin_party", "Admin de cette partie : "+data.admin);
 		let liste = "";
 		if (data.players.length > 0) {
 			for (let i = 0; i < data.players.length; i++) {
@@ -117,7 +117,7 @@
 		} else {
 			liste = "<span style='color: orange'>Aucun joueur dans cette partie</span>";
 		}
-		document.getElementById("list_players_party").innerHTML = liste;
+		setHtml('list_players_party', liste);
 	});
 
 	socket.on("display_parties", function(parties) {
@@ -136,7 +136,7 @@
 
 	onclick("login_button", function () {
 		if (document.getElementById("pseudo_input").value === "") {
-			document.getElementById("error_login").innerText = "Vous n'avez rien rentré";
+			setText("error_login", "Vous n'avez rien rentré");
 			return;
 		}
 		socket.emit("login", document.getElementById("pseudo_input").value);
@@ -211,5 +211,13 @@
 
 	function onclick(id, callback) {
 		document.getElementById(id).onclick = callback;
+	}
+
+	function setText(id,text) {
+		document.getElementById(id).innerText = text;
+	}
+
+	function setHtml(id,html) {
+		document.getElementById(id).innerHTML = html;
 	}
 </script>
