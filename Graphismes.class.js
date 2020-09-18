@@ -9,7 +9,7 @@ const formes = {
 			writeBody: function (context, entity) {
 				context.beginPath();
 				context.arc(entity.x + 4, entity.y + 4, entity.radius, 0, Math.PI * 2);
-				context.setFillStyle("yellow");
+				context.setFillStyle(entity.color);
 				context.setStrokeStyle("black");
 				context.setLineWidth("0.5");
 				context.fill();

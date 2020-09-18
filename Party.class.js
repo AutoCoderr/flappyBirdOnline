@@ -15,7 +15,8 @@ const paramsEntities = {
 	player: {
 		w: 7/diffAire,
 		h: 7/diffAire,
-		radius: 3/diffAire
+		radius: 3/diffAire,
+		color: config.baseColorOfPlayer
 	},
 	pipe: {
 		w: 25/diffAire,
@@ -404,8 +405,10 @@ class Party {
 			});
 
 		}
+		let nb = 0;
 		this.broadcastSomethings((aPlayer) => {
-			this.teleportEntitieTo(aPlayer.entity.id, widthCanvas / 5, heightCanvas / 2);
+			this.teleportEntitieTo(aPlayer.entity.id, widthCanvas / 5, (heightCanvas/2) + config.heightPerPlayer*(this.players.length+1)/2 - nb*config.heightPerPlayer);
+			nb += 1;
 		});
 		clearInterval(this.timeoutPutTuyaux);
 		this.timeoutPutTuyaux = null;
