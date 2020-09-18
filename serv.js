@@ -8,11 +8,20 @@ const Party = require("./Party.class"),
 let players = {};
 let parties = [];
 
-const mime_per_extention = {
-	"css": "text/css",
-	"html": "text/html",
-	"htm": "text/html",
-	"js": "text/javascript"
+const extension_per_mime = {
+	"text/css": ["css"],
+	"text/html": ["html","htm"],
+	"text/javascript": ["js"],
+	"image/{ext}": ["png", "jpg", "gif", "jpeg", "bmp", "tif", "tiff", "ico"]
+};
+
+let mime_per_extension = {};
+
+for (let mime in extension_per_mime) {
+	const extensions = extension_per_mime[mime];
+	for (let i=0;i<extensions.length;i++) {
+		mime_per_extension[extensions[i]] = mime.replace("{ext}", extensions[i]);
+	}
 }
 
 const forbidden_path = ["node_modules"];
@@ -33,66 +42,53 @@ const server = http.createServer(function(req, res) { // -----------------------
 		page = "/socket.io/socket.io.js"
 	}
 	page = __dirname + page;
-	const ext = page.split(".")[page.split(".").length-1]
-	if (ext == "png" | ext == "jpg" | ext == "gif" | ext == "jpeg" | ext == "bmp" | ext == "tif" | ext == "tiff" | ext == "ico") {
-		fs.readFile(page, function(error, content) {
-			if(error){
-				res.writeHead(404, {"Content-Type": "text/plain"});
-				res.end("ERROR 404 : Page not found");
-			} else {
-				res.writeHead(200, {"Content-Type": "image/" + ext});
-				res.end(content);
-			}
-		});
-	} else {
-		let authorized = true;
+	let authorized = true;
 
-		const ext = page.split(".")[page.split(".").length-1];
-		const filename = page.split("/")[page.split("/").length-1];
+	const ext = page.split(".")[page.split(".").length-1];
+	const filename = page.split("/")[page.split("/").length-1];
 
-		for (let i=0;i<forbidden_path.length;i++) {
-			if (
-				page.length >= forbidden_path[i].length &&
-				page.substring(0,forbidden_path[i].length) === forbidden_path[i]
-			) {
+	for (let i=0;i<forbidden_path.length;i++) {
+		if (
+			page.length >= forbidden_path[i].length &&
+			page.substring(0,forbidden_path[i].length) === forbidden_path[i]
+		) {
+			authorized = false;
+			break;
+		}
+	}
+
+	if (authorized) {
+
+		for (let i = 0; i < forbidden_extentions.length; i++) {
+			if (ext === forbidden_extentions[i]) {
 				authorized = false;
 				break;
 			}
 		}
-
-		if (authorized) {
-
-			for (let i = 0; i < forbidden_extentions.length; i++) {
-				if (ext === forbidden_extentions[i]) {
-					authorized = false;
+		if (!authorized) {
+			for (let i = 0; i < authorized_files.length; i++) {
+				if (filename === authorized_files[i]) {
+					authorized = true;
 					break;
 				}
 			}
-			if (!authorized) {
-				for (let i = 0; i < authorized_files.length; i++) {
-					if (filename === authorized_files[i]) {
-						authorized = true;
-						break;
-					}
-				}
+		}
+	}
+	if (authorized) {
+		fs.readFile(page, 'utf-8', function (error, content) {
+			if (error) {
+				res.writeHead(404, {"Content-Type": "text/plain"});
+				res.end("ERROR 404 : Page not found");
+			} else {
+				res.writeHead(200, {
+					"Content-Type": typeof (mime_per_extension[ext]) != "undefined" ? mime_per_extension[ext] : "text/plain"
+				});
+				res.end(content);
 			}
-		}
-		if (authorized) {
-			fs.readFile(page, 'utf-8', function (error, content) {
-				if (error) {
-					res.writeHead(404, {"Content-Type": "text/plain"});
-					res.end("ERROR 404 : Page not found");
-				} else {
-					res.writeHead(200, {
-						"Content-Type": typeof (mime_per_extention[ext]) != "undefined" ? mime_per_extention[ext] : "text/plain"
-					});
-					res.end(content);
-				}
-			});
-		} else {
-			res.writeHead(403, {"Content-Type": "text/plain"});
-			res.end("ERROR 403 : Access Forbidden");
-		}
+		});
+	} else {
+		res.writeHead(403, {"Content-Type": "text/plain"});
+		res.end("ERROR 403 : Access Forbidden");
 	}
 });
 
@@ -154,17 +150,22 @@ io.sockets.on('connection', function (socket) {
 		if (typeof(socket.player) == "undefined" || socket.player.party != null) {
 			return;
 		}
-		for (let i=0;i<parties.length;i++) {
-			if (parties[i].admin.pseudo === adminPseudo) {
-				let party = parties[i];
-				party.addPlayer(socket.player);
-				let party_players = party.getPseudoList();
-				socket.player.party = party;
-				party.broadcastSomethings((player) => {
-					player.socket.emit("display_party_players", {admin: party.admin.pseudo, players: party_players});
-				});
-			}
+		if (typeof(players[adminPseudo]) == "undefined") {
+			return;
 		}
+		if (players[adminPseudo].party == null) {
+			return;
+		}
+		if (players[adminPseudo].party.started) {
+			return;
+		}
+		let party = players[adminPseudo].party;
+		party.addPlayer(socket.player);
+		let party_players = party.getPseudoList();
+		socket.player.party = party;
+		party.broadcastSomethings((player) => {
+			player.socket.emit("display_party_players", {admin: party.admin.pseudo, players: party_players});
+		});
 	});
 
 	socket.on("start_party", function () {
@@ -188,11 +189,14 @@ io.sockets.on('connection', function (socket) {
 			party.broadcastSomethings((player) => {
 				player.socket.emit("start_party");
 				player.socket.emit("display_life", player.life);
-				const id = party.spawnEntitie(config.width/5,(config.height/2) + heightPerPlayer*(party.players.length+1)/2 - nb*heightPerPlayer, "player");
-				let entity = party.entities[id];
-				player.setEntity(entity);
-				entity.player = player;
-				nb += 1;
+			}, null, () => {
+				party.broadcastSomethings((player) => {
+					const id = party.spawnEntitie(config.width/5,(config.height/2) + heightPerPlayer*(party.players.length+1)/2 - nb*heightPerPlayer, "player");
+					let entity = party.entities[id];
+					player.setEntity(entity);
+					entity.player = player;
+					nb += 1;
+				});
 			});
 		}
 	});

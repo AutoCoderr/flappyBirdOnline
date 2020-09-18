@@ -302,7 +302,7 @@ class Party {
 		}, exceptPlayers);
 	}
 
-	broadcastSomethings(callback, exceptPlayers = null) {
+	broadcastSomethings(callback, exceptPlayers = null, atFinish = null) {
 		for(let i=0;i<this.players.length;i++) {
 			let excepted = false;
 			if (exceptPlayers instanceof Array) {
@@ -328,6 +328,9 @@ class Party {
 		}
 		if (!excepted) {
 			callback(this.admin);
+		}
+		if (typeof(atFinish) == "function") {
+			atFinish();
 		}
 	}
 
