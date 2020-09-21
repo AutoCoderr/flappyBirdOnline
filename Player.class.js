@@ -3,7 +3,7 @@ const config = require("./config");
 class Player {
 	life;
 	pipePassed;
-	deplace;
+	state;
 	entity;
 	socket;
 	party;
@@ -13,7 +13,7 @@ class Player {
 		this.life = config.lifePerPlayer;
 		this.pipePassed = 0;
 		this.setSocket(socket);
-		this.deplace = false;
+		this.state = "motionless";
 	}
 
 	setPseudo(pseudo) {

@@ -211,6 +211,8 @@ io.sockets.on('connection', function (socket) {
 					player.setEntity(entity);
 					entity.player = player;
 					nb += 1;
+				}, null, () => {
+					party.countDown();
 				});
 			});
 		}

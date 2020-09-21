@@ -35,6 +35,7 @@ socket.on("login_successfull", function (config) {
 });
 
 socket.on("stop_party", function () {
+	hide("display_party");
 	hide("prepare_party");
 	display("list_parties");
 	display("go_to_menu_button");

@@ -52,7 +52,7 @@ class Party {
 		this.setAdmin(admin);
 		this.firstStart = true;
 		this.entities = {};
-		this.canPlay = true;
+		this.canPlay = false;
 		this.started = false;
 		this.graphismes = new Graphismes(this);
 		this.animations = new Animations(this);
@@ -78,9 +78,19 @@ class Party {
 	removePlayer(player) {
 		for (let i=0;i<this.players.length;i++) {
 			if (this.players[i].pseudo === player.pseudo) {
+				if (player.entity != null) {
+					this.removeEntitie(this.players[i].entity.id);
+				}
+				player.party = null;
+				player.entity = null;
+				player.deplace = false;
+				player.pipePassed = 0;
+				player.life = config.lifePerPlayer;
+				this.broadcastMsgs(this.players[i].pseudo+" a quitté la partie", "warning", [this.players[i]]);
 				this.players.splice(i,1);
 				return true;
 			}
+
 		}
 		return false;
 	}
@@ -252,16 +262,19 @@ class Party {
 	}
 
 	flyBird(player) {
-		if (this.canPlay && !player.deplace && this.started) {
-			player.deplace = true;
+		if (this.canPlay && player.deplace !== "flying" && this.started) {
+			player.deplace = "flying";
 			const entity = player.entity;
 			this.stopEntitie(entity.id);
-			this.entities[1].toDisplay = "toUp";
+			entity.toDisplay = "toUp";
 			this.moveEntitieTo(entity.id, entity.x,0,15*diffAire);
 			if (this.firstStart) {
 				player.socket.emit("remove_msgs");
 				player.pipePassed = 0;
 				player.socket.emit("display_pipes_passed", player.pipePassed);
+				this.broadcastSomethings((aPlayer) => {
+					this.releaseBird(aPlayer)
+				}, [player]);
 				this.firstStart = false;
 				this.putPipes();
 			}
@@ -269,8 +282,8 @@ class Party {
 	}
 
 	releaseBird(player) {
-		if (this.canPlay && player.deplace && this.started) {
-			player.deplace = false;
+		if (this.canPlay && player.deplace !== "falling" && this.started) {
+			player.deplace = "falling";
 			const entity = player.entity;
 			this.stopEntitie(entity.id);
 			entity.toDisplay = "default";
@@ -301,6 +314,12 @@ class Party {
 		this.broadcastSomethings((player) => {
 			player.socket.emit("display_msgs", {type, msgs});
 		}, exceptPlayers);
+	}
+
+	broadcastRemoveMsgs(exceptPlayers) {
+		this.broadcastSomethings((player) => {
+			player.socket.emit("remove_msgs");
+		}, exceptPlayers)
 	}
 
 	broadcastSomethings(callback, exceptPlayers = null, atFinish = null) {
@@ -337,6 +356,9 @@ class Party {
 
 	stopParty(player) {
 		if (player.pseudo === this.admin.pseudo) {
+			if (this.started) {
+				this.removeAllEntities();
+			}
 			this.broadcastSomethings((aPlayer) => {
 				aPlayer.socket.emit("stop_party");
 				aPlayer.party = null;
@@ -346,11 +368,6 @@ class Party {
 				aPlayer.life = config.lifePerPlayer;
 			});
 		} else {
-			player.party = null;
-			player.entity = null;
-			player.deplace = false;
-			player.pipePassed = 0;
-			player.life = config.lifePerPlayer;
 			this.removePlayer(player);
 			let party_players = this.getPseudoList();
 			this.broadcastSomethings((player) => {
@@ -388,8 +405,9 @@ class Party {
 	}
 
 	lostPV(player) {
-		let entity = player.entity;
-		entity.toDisplay = "default";
+		this.broadcastSomethings((player) => {
+			player.entity.toDisplay = "default";
+		});
 		this.canPlay = false;
 		player.life -= 1;
 		player.socket.emit("display_life", player.life);
@@ -408,6 +426,7 @@ class Party {
 		let nb = 0;
 		this.broadcastSomethings((aPlayer) => {
 			this.teleportEntitieTo(aPlayer.entity.id, widthCanvas / 5, (heightCanvas/2) + config.heightPerPlayer*(this.players.length+1)/2 - nb*config.heightPerPlayer);
+			aPlayer.state = "motionless";
 			nb += 1;
 		});
 		clearInterval(this.timeoutPutTuyaux);
@@ -415,12 +434,27 @@ class Party {
 		this.deleteAllPipes();
 		this.writeBorder();
 		if (player.life > 0) {
-			setTimeout(() => {
-				this.canPlay = true;
-				this.firstStart = true;
-			}, 500);
+			this.countDown();
 		}
 		return {action: "stopAnime"};
+	}
+
+	countDown(sec = 3) {
+		let interval = setInterval(() => {
+			if (sec > 0) {
+				this.broadcastMsgs("Commencement dans "+sec+" secondes", "warning");
+			} else {
+				this.broadcastMsgs("C'est partit!!", "warning");
+				this.canPlay = true;
+				this.firstStart = true;
+
+				clearInterval(interval);
+				setTimeout(() => {
+					this.broadcastRemoveMsgs();
+				}, 1000);
+			}
+			sec -= 1;
+		}, 1000);
 	}
 
 	deleteAllPipes() {
