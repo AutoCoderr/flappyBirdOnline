@@ -111,10 +111,6 @@ function join_party(admin_of_party) {
 // On click buttons
 
 onclick("login_button", function () {
-	if (document.getElementById("pseudo_input").value === "") {
-		setText("error_login", "Vous n'avez rien rentré");
-		return;
-	}
 	socket.emit("login", document.getElementById("pseudo_input").value);
 });
 

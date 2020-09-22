@@ -100,6 +100,12 @@ io.sockets.on('connection', function (socket) {
 		if (typeof(socket.player) != "undefined") {
 			return;
 		}
+		if (pseudo === "") {
+			pseudo = "user"+rand(10**3,10**4);
+			while (typeof(players[pseudo]) != "undefined") {
+				pseudo = "user"+rand(10**3,10**4);
+			}
+		}
 		let nb = "";
 		while (typeof(players[pseudo+nb]) != "undefined") {
 			if (nb === "") {
