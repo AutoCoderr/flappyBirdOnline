@@ -479,7 +479,7 @@ class Party {
 }
 
 function rand(a,b) {
-	return Math.round(a+Math.random()*(b-a));
+	return a+Math.floor(Math.random()*(b+1-a));
 }
 
 module.exports = Party;

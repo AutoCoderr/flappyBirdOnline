@@ -295,7 +295,7 @@ function generateVariantColorFromBase(base) {
 }
 
 function rand(a,b) {
-	return a+Math.round(Math.random()*(b-a));
+	return a+Math.floor(Math.random()*(b+1-a));
 }
 
 function addMissingZero(num,n = 2) {
