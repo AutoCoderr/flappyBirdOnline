@@ -224,6 +224,7 @@ io.sockets.on('connection', function (socket) {
 		}
 		socket.emit("start_party");
 		let party = new Party(socket.player);
+		party.canPlay = true;
 		party.started = true;
 		parties.push(party);
 		socket.player.setParty(party);

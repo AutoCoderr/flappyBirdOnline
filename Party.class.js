@@ -1,9 +1,9 @@
-const { createCanvas } = require('canvas');
-const collisions = require("./Collisions.class");
-const Graphismes = require("./Graphismes.class");
-const Animations = require("./Animations.class");
-const Collisons = require("./Collisions.class");
-const GenerateCanvasInstructions = require("./GenerateCanvasInstructions.class");
+const { createCanvas } = require('canvas'),
+	Player = require("./Player.class"),
+	Graphismes = require("./Graphismes.class"),
+	Animations = require("./Animations.class"),
+	Collisons = require("./Collisions.class"),
+	GenerateCanvasInstructions = require("./GenerateCanvasInstructions.class");
 
 const config = require("./config"),
 	diffAire = config.diffAire,
@@ -86,7 +86,7 @@ class Party {
 				player.deplace = false;
 				player.pipePassed = 0;
 				player.life = config.lifePerPlayer;
-				this.broadcastMsgs(this.players[i].pseudo+" a quitté la partie", "warning", [this.players[i]]);
+				this.broadcastMsgs(this.players[i].pseudo+" a quitté la partie", "warning", this.players[i]);
 				this.players.splice(i,1);
 				return true;
 			}
@@ -274,7 +274,7 @@ class Party {
 				player.socket.emit("display_pipes_passed", player.pipePassed);
 				this.broadcastSomethings((aPlayer) => {
 					this.releaseBird(aPlayer)
-				}, [player]);
+				}, player);
 				this.firstStart = false;
 				this.putPipes();
 			}
@@ -332,6 +332,8 @@ class Party {
 						break;
 					}
 				}
+			} else if (exceptPlayers instanceof Player && exceptPlayers.pseudo === this.players[i].pseudo) {
+				excepted = true;
 			}
 			if (!excepted) {
 				callback(this.players[i]);
@@ -345,6 +347,8 @@ class Party {
 					break;
 				}
 			}
+		} else if (exceptPlayers instanceof Player && exceptPlayers.pseudo === this.admin.pseudo) {
+			excepted = true
 		}
 		if (!excepted) {
 			callback(this.admin);
@@ -413,7 +417,7 @@ class Party {
 		player.socket.emit("display_life", player.life);
 		if (player.life > 0) {
 			player.socket.emit("display_msgs", {type: "warning", msgs: "Vous avez perdu une vie"});
-			this.broadcastMsgs(player.pseudo+" a perdu une vie", "warning", [player]);
+			this.broadcastMsgs(player.pseudo+" a perdu une vie", "warning", player);
 		} else {
 			this.players.sort((a,b) => b.life - a.life);
 			let nb = 1;
