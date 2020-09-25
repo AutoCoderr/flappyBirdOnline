@@ -3,7 +3,8 @@ let http = require('http'),
 	fs = require('fs');
 
 const Party = require("./Party.class"),
-	Player = require("./Player.class");
+	Player = require("./Player.class"),
+	Helpers = require("./Helpers.class");
 
 let players = {};
 let parties = [];
@@ -101,9 +102,9 @@ io.sockets.on('connection', function (socket) {
 			return;
 		}
 		if (pseudo === "") {
-			pseudo = "user"+rand(10**3,10**4);
+			pseudo = "user"+Helpers.rand(10**3,10**4);
 			while (typeof(players[pseudo]) != "undefined") {
-				pseudo = "user"+rand(10**3,10**4);
+				pseudo = "user"+Helpers.rand(10**3,10**4);
 			}
 		}
 		let nb = "";
@@ -184,8 +185,36 @@ io.sockets.on('connection', function (socket) {
 		party.broadcastSomethings((player) => {
 			player.socket.emit("display_party_players", {admin: party.admin.pseudo, players: party_players});
 		});
+		displayAllParties(socket.broadcast);
 		socket.emit("remove_msgs");
 		socket.emit("party_joined");
+	});
+
+	socket.on("want_restart_party", function () {
+		if (typeof(socket.player) == "undefined" || socket.player.party == null) {
+			socket.emit("display_msgs", {type: "error", msgs: "Vous n'êtes dans aucune partie où vous n'êtes même pas connecté"});
+			return;
+		}
+		let player = socket.player;
+		let party = player.party;
+		if (!party.finished) {
+			socket.emit("display_msgs", {type: "error", msgs: "Cette partie n'est pas encore terminée"});
+			return;
+		}
+
+		if (party.admin.pseudo === player.pseudo) {
+			socket.emit("display_msgs", {type: "error", msgs: "En tant qu'admin vous devez soit rester dans la partie soit y mettre fin"});
+			return;
+		}
+
+		if (player.wantToRestart) {
+			socket.emit("display_msgs", {type: "error", msgs: "Vous avez déjà choisis de recommencer"});
+			return;
+		}
+
+		player.wantToRestart = true;
+
+		socket.emit("hide_want_to_restart_button");
 	});
 
 	socket.on("start_party", function () {
@@ -203,24 +232,7 @@ io.sockets.on('connection', function (socket) {
 				socket.emit("display_msgs", {type: "error", msgs: "Vous êtes encore seul dans cette partie"});
 				return;
 			}
-			party.started = true;
-			let nb = 0;
-			party.broadcastSomethings((player) => {
-				player.socket.emit("start_party");
-				player.socket.emit("display_life", player.life);
-				player.socket.emit("remove_msgs");
-			}, null, () => {
-				party.broadcastSomethings((player) => {
-					const id = party.spawnEntitie(config.width/5,(config.height/2) + config.heightPerPlayer*(party.players.length+1)/2 - nb*config.heightPerPlayer,
-						"player", null, (player.pseudo !== player.party.admin.pseudo) ? {color: generateVariantColorFromBase(config.baseColorOfPlayer)} : null);
-					let entity = party.entities[id];
-					player.setEntity(entity);
-					entity.player = player;
-					nb += 1;
-				}, null, () => {
-					party.countDown();
-				});
-			});
+			party.startParty();
 		}
 	});
 
@@ -284,32 +296,6 @@ function quitParty(socket) {
 	socket.player.party.stopParty(socket.player);
 
 	displayAllParties(socket.broadcast);
-}
-
-function generateVariantColorFromBase(base) {
-	const valueToChange = 150;
-
-	let R = parseInt(base.substring(1,3), 16);
-	let G = parseInt(base.substring(3,5), 16);
-	let B = parseInt(base.substring(5,7), 16);
-
-	R = rand(Math.max(0,R-valueToChange),Math.min(255,R+valueToChange));
-	G = rand(Math.max(0,G-valueToChange),Math.min(255,G+valueToChange));
-	B = rand(Math.max(0,B-valueToChange),Math.min(255,B+valueToChange));
-
-	return '#'+addMissingZero(R.toString(16)) + addMissingZero(G.toString(16)) + addMissingZero(B.toString(16));
-}
-
-function rand(a,b) {
-	return a+Math.floor(Math.random()*(b+1-a));
-}
-
-function addMissingZero(num,n = 2) {
-	num = num.toString();
-	while (num.length < n) {
-		num = '0'+num;
-	}
-	return num;
 }
 
 server.listen(3005);

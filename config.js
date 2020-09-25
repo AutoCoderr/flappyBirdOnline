@@ -1,7 +1,7 @@
 let config = {
 	width: 600,
 	height: 300,
-	lifePerPlayer: 5,
+	lifePerPlayer: 2,
 	heightPerPlayer: 20,
 	baseColorOfPlayer: "#ffff00"
 };

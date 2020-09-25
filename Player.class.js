@@ -8,10 +8,12 @@ class Player {
 	socket;
 	party;
 	pseudo;
+	wantToRestart;
 
 	constructor(socket) {
 		this.life = config.lifePerPlayer;
 		this.pipePassed = 0;
+		this.wantToRestart = false;
 		this.setSocket(socket);
 		this.state = "motionless";
 	}

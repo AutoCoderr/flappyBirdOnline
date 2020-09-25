@@ -3,7 +3,8 @@ const { createCanvas } = require('canvas'),
 	Graphismes = require("./Graphismes.class"),
 	Animations = require("./Animations.class"),
 	Collisons = require("./Collisions.class"),
-	GenerateCanvasInstructions = require("./GenerateCanvasInstructions.class");
+	GenerateCanvasInstructions = require("./GenerateCanvasInstructions.class"),
+	Helpers = require("./Helpers.class");
 
 const config = require("./config"),
 	diffAire = config.diffAire,
@@ -44,6 +45,7 @@ class Party {
 	canPlay;
 	timeoutPutTuyaux;
 	started;
+	finished;
 	admin;
 
 	constructor(admin) {
@@ -54,6 +56,7 @@ class Party {
 		this.entities = {};
 		this.canPlay = false;
 		this.started = false;
+		this.finished = false;
 		this.graphismes = new Graphismes(this);
 		this.animations = new Animations(this);
 		this.collisions = new Collisons(this);
@@ -167,6 +170,9 @@ class Party {
 		this.entities[id].exist = false;
 		if (this.entities[id].timeout != null) clearTimeout(this.entities[id].timeout);
 		this.graphismes.hide(this.entities[id]);
+		if (typeof(this.entities[id].player) != "undefined") {
+			this.entities[id].player.entity = null;
+		}
 		delete this.entities[id];
 	}
 
@@ -262,6 +268,9 @@ class Party {
 	}
 
 	flyBird(player) {
+		if (player.entity == null) {
+			return;
+		}
 		if (this.canPlay && player.deplace !== "flying" && this.started) {
 			player.deplace = "flying";
 			const entity = player.entity;
@@ -282,6 +291,9 @@ class Party {
 	}
 
 	releaseBird(player) {
+		if (player.entity == null) {
+			return;
+		}
 		if (this.canPlay && player.deplace !== "falling" && this.started) {
 			player.deplace = "falling";
 			const entity = player.entity;
@@ -292,7 +304,7 @@ class Party {
 	}
 
 	putPipes() {
-		const yPos = rand(heightCanvas/10+spaceBetweenTwoPipe,heightCanvas*0.9);
+		const yPos = Helpers.rand(heightCanvas/10+spaceBetweenTwoPipe,heightCanvas*0.9);
 		const idTuyauxA = this.spawnEntitie(widthCanvas-30,yPos,"pipe",null,{h: heightCanvas-yPos});
 		const idTuyauxB = this.spawnEntitie(widthCanvas-30,2,"pipeUpsideDown",null,{h: yPos-spaceBetweenTwoPipe});
 		const idPipeDetector = this.spawnEntitie(widthCanvas-30,yPos-spaceBetweenTwoPipe+4,"pipeDetector");
@@ -365,6 +377,7 @@ class Party {
 			}
 			this.broadcastSomethings((aPlayer) => {
 				aPlayer.socket.emit("stop_party");
+				aPlayer.socket.emit("remove_msgs");
 				aPlayer.party = null;
 				aPlayer.entity = null;
 				aPlayer.deplace = false;
@@ -415,32 +428,91 @@ class Party {
 		this.canPlay = false;
 		player.life -= 1;
 		player.socket.emit("display_life", player.life);
+		clearInterval(this.timeoutPutTuyaux);
+		this.timeoutPutTuyaux = null;
+		this.deleteAllPipes();
+		this.writeBorder();
 		if (player.life > 0) {
 			player.socket.emit("display_msgs", {type: "warning", msgs: "Vous avez perdu une vie"});
 			this.broadcastMsgs(player.pseudo+" a perdu une vie", "warning", player);
+			let nb = 0;
+			this.broadcastSomethings((aPlayer) => {
+				this.teleportEntitieTo(aPlayer.entity.id, widthCanvas / 5, (heightCanvas/2) + config.heightPerPlayer*(this.players.length+1)/2 - nb*config.heightPerPlayer);
+				aPlayer.state = "motionless";
+				nb += 1;
+			});
+			this.countDown();
 		} else {
+			this.finished = true;
 			this.players.sort((a,b) => b.life - a.life);
 			let nb = 1;
 			this.broadcastSomethings((aPlayer) => {
 				aPlayer.socket.emit("display_msgs", {msgs: "Partie terminée, vous êtes numéro "+nb, type: "warning"});
 				nb += 1;
 			});
-
-		}
-		let nb = 0;
-		this.broadcastSomethings((aPlayer) => {
-			this.teleportEntitieTo(aPlayer.entity.id, widthCanvas / 5, (heightCanvas/2) + config.heightPerPlayer*(this.players.length+1)/2 - nb*config.heightPerPlayer);
-			aPlayer.state = "motionless";
-			nb += 1;
-		});
-		clearInterval(this.timeoutPutTuyaux);
-		this.timeoutPutTuyaux = null;
-		this.deleteAllPipes();
-		this.writeBorder();
-		if (player.life > 0) {
-			this.countDown();
+			this.removeAllEntities();
+			this.newParty();
 		}
 		return {action: "stopAnime"};
+	}
+
+	newParty() {
+		this.broadcastSomethings((player) => {
+			player.pipePassed = 0;
+			player.life = config.lifePerPlayer;
+		});
+		this.broadcastSomethings((player) => {
+			player.socket.emit("choose_restart_party");
+			player.wantToRestart = false;
+		}, this.admin);
+
+		let sec = 10;
+		setTimeout(() => {
+
+			let interval = setInterval(() => {
+				if (sec <= 0) {
+					clearInterval(interval);
+					let playersToRemove = [];
+					for (let i=0;i<this.players.length;i++) {
+						if (!this.players[i].wantToRestart) {
+							playersToRemove.push(this.players[i]);
+						}
+					}
+					for (let i=0;i<playersToRemove.length;i++) {
+						playersToRemove[i].socket.emit("stop_party");
+						playersToRemove[i].socket.emit("remove_msgs");
+						this.removePlayer(playersToRemove[i]);
+					}
+					this.startParty();
+				} else {
+					this.broadcastMsgs("Recommencement de la partie dans " + sec + " secondes", "info");
+					sec -= 1;
+				}
+			}, 1000);
+
+		}, 2000);
+	}
+
+	startParty() {
+		this.finished = false;
+		this.started = true;
+		let nb = 0;
+		this.broadcastSomethings((player) => {
+			player.socket.emit("start_party");
+			player.socket.emit("display_life", player.life);
+			player.socket.emit("remove_msgs");
+		}, null, () => {
+			this.broadcastSomethings((player) => {
+				const id = this.spawnEntitie(config.width/5,(config.height/2) + config.heightPerPlayer*(this.players.length+1)/2 - nb*config.heightPerPlayer,
+					"player", null, (player.pseudo !== player.party.admin.pseudo) ? {color: Helpers.generateVariantColorFromBase(config.baseColorOfPlayer)} : null);
+				let entity = this.entities[id];
+				player.setEntity(entity);
+				entity.player = player;
+				nb += 1;
+			}, null, () => {
+				this.countDown();
+			});
+		});
 	}
 
 	countDown(sec = 3) {
@@ -476,10 +548,6 @@ class Party {
 		}
 		return pseudos;
 	}
-}
-
-function rand(a,b) {
-	return a+Math.floor(Math.random()*(b+1-a));
 }
 
 module.exports = Party;

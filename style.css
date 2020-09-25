@@ -1,4 +1,4 @@
-#display_party, #choose_party_type, #prepare_party, #list_parties {
+#display_party, #choose_party_type, #prepare_party, #list_parties, #button_to_restart_party {
     display: none;
 }
 

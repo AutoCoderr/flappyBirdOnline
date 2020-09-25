@@ -23,6 +23,7 @@ socket.on("start_party", function () {
 	hide("go_to_menu_button");
 	hide("choose_party_type");
 	hide("prepare_party");
+	hide("button_to_restart_party");
 	display("display_party");
 	context.clearRect(0, 0, canvas.width, canvas.height);
 });
@@ -93,6 +94,14 @@ socket.on("display_parties", function(parties) {
 	ul.innerHTML = liste;
 });
 
+socket.on("choose_restart_party", function () {
+	display("button_to_restart_party");
+});
+
+socket.on("hide_want_to_restart_button", function () {
+	hide("button_to_restart_party");
+});
+
 socket.on("party_joined", function () {
 	hide("list_parties");
 	hide("go_to_menu_button");
@@ -140,6 +149,10 @@ onclick("go_to_menu_button", function () {
 
 onclick("start_party_button", function () {
 	socket.emit("start_party");
+});
+
+onclick("button_to_restart_party", function () {
+	socket.emit("want_restart_party");
 });
 
 onclick("quit_party_button", function () {
