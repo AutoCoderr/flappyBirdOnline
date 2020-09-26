@@ -124,8 +124,10 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.on('disconnect',function(){
-		if (typeof(socket.player) != "undefined" && socket.player.party != null) {
-			quitParty(socket);
+		if (typeof(socket.player) != "undefined") {
+			if (socket.player.party != null) {
+				quitParty(socket);
+			}
 			delete players[socket.player.pseudo];
 		}
 	});
