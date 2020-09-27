@@ -75,7 +75,7 @@ socket.on("display_party_players", function (data) {
 			liste += "<li>" + data.players[i] + "</li>";
 		}
 	} else {
-		liste = "<span style='color: orange'>Aucun joueur dans cette partie</span>";
+		liste = "<li style='color: orange'>Aucun joueur dans cette partie</li>";
 	}
 	setHtml('list_players_party', liste);
 });
@@ -130,7 +130,7 @@ onclick("single_party_button", function () {
 onclick("create_party_button", function () {
 	display("prepare_party");
 	hide("choose_party_type");
-	display("start_party_button");
+	document.getElementById("start_party_button").style.display = "inline-block";
 	socket.emit("create_party");
 });
 

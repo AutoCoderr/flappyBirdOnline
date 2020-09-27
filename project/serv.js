@@ -13,7 +13,8 @@ const extension_per_mime = {
 	"text/css": ["css"],
 	"text/html": ["html","htm"],
 	"text/javascript": ["js"],
-	"image/{ext}": ["png", "jpg", "gif", "jpeg", "bmp", "tif", "tiff", "ico"]
+	"image/{ext}": ["png", "gif", "bmp", "tif", "tiff", "ico"],
+	"image/jpeg": ["jpg", "jpeg"]
 };
 
 let mime_per_extension = {};
@@ -76,7 +77,7 @@ const server = http.createServer(function(req, res) { // -----------------------
 		}
 	}
 	if (authorized) {
-		fs.readFile(page, 'utf-8', function (error, content) {
+		fs.readFile(page, function (error, content) {
 			if (error) {
 				res.writeHead(404, {"Content-Type": "text/plain"});
 				res.end("ERROR 404 : Page not found");

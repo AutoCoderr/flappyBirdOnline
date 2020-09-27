@@ -2,9 +2,32 @@
     display: none;
 }
 
+main > section {
+    padding: 35px 0;
+}
+
 main {
-    text-align: center;
-    margin: 0 auto;
+    background-image: url("/images/background.png");
+    background-repeat: repeat-x;
+    background-size: cover;
+    height: 100vh;
+}
+
+h1 {
+    font-size: 3rem;
+    color: #EEEE00;
+    font-family: "OCR A Std", monospace;
+}
+
+h2 {
+    font-size: 1.75rem;
+    color: #FFFF77;
+    font-family: "OCR A Std", monospace;
+}
+
+li {
+    list-style: none;
+    margin-left: -2em;
 }
 
 #go_to_menu_button {
@@ -16,4 +39,24 @@ main {
 
 #error_login {
     color: red;
+}
+
+.clearfix::before {
+    content: '';
+    display: table;
+}
+
+.clearfix::after {
+    content: '';
+    clear: both;
+    display: table;
+}
+
+.container {
+    width: 1170px;
+    padding: 0 15px;
+    margin: 0 auto;
+    position: relative;
+    height: 100%;
+    text-align: center;
 }
