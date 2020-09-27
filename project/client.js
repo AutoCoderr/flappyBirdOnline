@@ -1,8 +1,6 @@
 let canvas  = document.querySelector('#canvas');
 let context = canvas.getContext('2d');
 
-const colorByMessageType = {"info": "green", "warning": "orange", "error": "red"};
-
 const socket = io.connect('http://' + location.hostname + ':' + location.port);
 
 
@@ -44,11 +42,11 @@ socket.on("stop_party", function () {
 
 socket.on("display_msgs", function (data) {
 	if (typeof(data.msgs) == "string") {
-		setHtml("msgs", "<span style='color: "+colorByMessageType[data.type]+"'>"+data.msgs+"</span>");
+		setHtml("msgs", "<span class='"+data.type+"Message'>"+data.msgs+"</span>");
 	} else if (typeof(data.msgs) == "object" && data.msgs instanceof Array) {
 		let str = "<ul>";
 		for (let i = 0; i < data.msgs.length; i++) {
-			str += "<li style='color: "+colorByMessageType[data.type]+"'>" + data.msgs[i] + "</li>";
+			str += "<li class='"+data.type+"Message'>" + data.msgs[i] + "</li>";
 		}
 		str += "</ul>";
 		setHtml("msgs", str);
@@ -75,7 +73,7 @@ socket.on("display_party_players", function (data) {
 			liste += "<li>" + data.players[i] + "</li>";
 		}
 	} else {
-		liste = "<span style='color: orange'>Aucun joueur dans cette partie</span>";
+		liste = "<li style='color: orange'>Aucun joueur dans cette partie</li>";
 	}
 	setHtml('list_players_party', liste);
 });
@@ -130,7 +128,7 @@ onclick("single_party_button", function () {
 onclick("create_party_button", function () {
 	display("prepare_party");
 	hide("choose_party_type");
-	display("start_party_button");
+	document.getElementById("start_party_button").style.display = "inline-block";
 	socket.emit("create_party");
 });
 
@@ -170,16 +168,18 @@ onclick("quit_party_button", function () {
 
 // Detect space push
 
-document.onkeydown = function (){
+document.onkeydown = function (event){
 	switch (event.keyCode) {
 		case 32: // espace
+			event.preventDefault()
 			socket.emit("fly_bird");
 	}
 };
 
-document.onkeyup = function (){
+document.onkeyup = function (event){
 	switch (event.keyCode) {
 		case 32: // espace
+			event.preventDefault()
 			socket.emit("release_bird");
 	}
 };

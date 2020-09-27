@@ -44,6 +44,8 @@ class Party {
 	collisions;
 	canPlay;
 	timeoutPutTuyaux;
+	intervalNewParty;
+	timeoutNewParty;
 	started;
 	finished;
 	admin;
@@ -60,6 +62,9 @@ class Party {
 		this.graphismes = new Graphismes(this);
 		this.animations = new Animations(this);
 		this.collisions = new Collisons(this);
+		this.intervalNewParty = null;
+		this.timeoutNewParty = null;
+		this.timeoutPutTuyaux = null;
 	}
 
 	setAdmin(admin) {
@@ -375,6 +380,12 @@ class Party {
 			if (this.started) {
 				this.removeAllEntities();
 			}
+			if (this.intervalNewParty != null) {
+				clearInterval(this.intervalNewParty);
+			}
+			if (this.timeoutNewParty != null) {
+				clearInterval(this.timeoutNewParty);
+			}
 			this.broadcastSomethings((aPlayer) => {
 				aPlayer.socket.emit("stop_party");
 				aPlayer.socket.emit("remove_msgs");
@@ -467,11 +478,12 @@ class Party {
 		}, this.admin);
 
 		let sec = 10;
-		setTimeout(() => {
-
-			let interval = setInterval(() => {
+		this.timeoutNewParty = setTimeout(() => {
+			this.timeoutNewParty = null;
+			this.intervalNewParty = setInterval(() => {
 				if (sec <= 0) {
-					clearInterval(interval);
+					clearInterval(this.intervalNewParty);
+					this.intervalNewParty = null;
 					let playersToRemove = [];
 					for (let i=0;i<this.players.length;i++) {
 						if (!this.players[i].wantToRestart) {

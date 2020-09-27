@@ -2,9 +2,69 @@
     display: none;
 }
 
-main {
+#canvas {
+    height: 70vh;
+    width: 100%;
+    box-shadow: -10px 5px 5px #222222;
+    border: 1px solid black;
+}
+
+.errorMessage, .warningMessage, .infoMessage {
+    font-size: 2rem;
+    font-weight: bold;
+    background-color: #000000;
+}
+
+.errorMessage {
+    color: red;
+}
+
+.warningMessage {
+    color: orange;
+}
+
+.infoMessage {
+    color: green;
+}
+
+html {
+    background-image: url("/images/background.png");
+    background-repeat: repeat-x;
+    background-size: cover;
+    height: 100vh;
+}
+
+.button {
+    display: inline-block;
+    background-color: white;
+    width: 10rem;
+    border-radius: 10rem;
+    vertical-align: middle;
+    padding: 1em 2em;
+    position: relative;
+    cursor: pointer;
+}
+
+.button:hover {
+    color: #777700;
+}
+
+h1 {
+    font-size: 3rem;
+    color: #EEEE00;
+    font-family: "OCR A Std", monospace;
     text-align: center;
-    margin: 0 auto;
+}
+
+h2 {
+    font-size: 1.75rem;
+    color: #FFFF77;
+    font-family: "OCR A Std", monospace;
+}
+
+li {
+    list-style: none;
+    margin-left: -2em;
 }
 
 #go_to_menu_button {
@@ -16,4 +76,24 @@ main {
 
 #error_login {
     color: red;
+}
+
+.clearfix::before {
+    content: '';
+    display: table;
+}
+
+.clearfix::after {
+    content: '';
+    clear: both;
+    display: table;
+}
+
+.container {
+    width: 1170px;
+    padding: 0 15px;
+    margin: 0 auto;
+    position: relative;
+    height: 100%;
+    text-align: center;
 }
