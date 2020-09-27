@@ -2,6 +2,30 @@
     display: none;
 }
 
+#canvas {
+    height: 60vh;
+    width: 100%;
+    box-shadow: -10px 5px 5px #222222;
+    border: 1px solid black;
+}
+
+.errorMessage, .warningMessage, .infoMessage {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.errorMessage {
+    color: red;
+}
+
+.warningMessage {
+    color: orange;
+}
+
+.infoMessage {
+    color: green;
+}
+
 main > section {
     padding: 35px 0;
 }
@@ -11,6 +35,21 @@ main {
     background-repeat: repeat-x;
     background-size: cover;
     height: 100vh;
+}
+
+.button {
+    display: inline-block;
+    background-color: white;
+    width: 10rem;
+    border-radius: 10rem;
+    vertical-align: middle;
+    padding: 1em 2em;
+    position: relative;
+    cursor: pointer;
+}
+
+.button:hover {
+    color: #777700;
 }
 
 h1 {
