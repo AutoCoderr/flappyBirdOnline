@@ -257,14 +257,14 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.on("fly_bird", function () {
-		if (typeof(socket.player) == "undefined") {
+		if (typeof(socket.player) == "undefined" || socket.player.party == null) {
 			return;
 		}
 		socket.player.party.flyBird(socket.player);
 	});
 
 	socket.on("release_bird", function () {
-		if (typeof(socket.player) == "undefined") {
+		if (typeof(socket.player) == "undefined" || socket.player.party == null) {
 			return;
 		}
 		socket.player.party.releaseBird(socket.player);
