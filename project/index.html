@@ -7,8 +7,7 @@
 </head>
 <body>
 	<main>
-		<section class="container clearfix">
-			<h1>Flappybird online</h1>
+		<h1>Flappybird online</h1>
 			<div id="display_party">
 				PV : <span id="life">5</span><br/>
 				Tuyaux passés : <span id="pipes_passed">0</span>
@@ -20,20 +19,20 @@
 
 			<a class="button" id="go_to_menu_button">Retourner au menu</a>
 
-			<div id="login">
+			<div id="login" class="container clearfix">
 				<h2>Veuillez choisir votre pseudo :</h2>
 				<input type="text" id="pseudo_input"/><br/>
 				<span id="error_login"></span><br/>
 				<a class="button" id="login_button">Valider</a>
 			</div>
 
-			<div id="choose_party_type">
+			<div id="choose_party_type" class="container clearfix">
 				<a class="button" id="single_party_button">Lancer partie solo</a><br/><br/>
 				<a class="button" id="create_party_button">Créer partie</a><br/><br/>
 				<a class="button" id="list_party_button">Rejoindre partie</a>
 			</div>
 
-			<div id="prepare_party">
+			<div id="prepare_party" class="container clearfix">
 				<h2>En attente de joueurs</h2>
 				<h3 id="admin_party"></h3>
 				<ul id="list_players_party"></ul>
@@ -41,12 +40,12 @@
 				<a class="button" id="quit_party_button">Quitter</a>
 			</div>
 
-			<div id="list_parties">
+			<div id="list_parties" class="container clearfix">
 				<h2>Liste des parties :</h2>
 				<ul></ul>
 			</div>
 
-			<div id="msgs"></div>
+			<div class="container clearfix" id="msgs"></div>
 		</section>
 	</main>
 </body>

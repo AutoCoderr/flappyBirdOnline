@@ -168,16 +168,18 @@ onclick("quit_party_button", function () {
 
 // Detect space push
 
-document.onkeydown = function (){
+document.onkeydown = function (event){
 	switch (event.keyCode) {
 		case 32: // espace
+			event.preventDefault()
 			socket.emit("fly_bird");
 	}
 };
 
-document.onkeyup = function (){
+document.onkeyup = function (event){
 	switch (event.keyCode) {
 		case 32: // espace
+			event.preventDefault()
 			socket.emit("release_bird");
 	}
 };
