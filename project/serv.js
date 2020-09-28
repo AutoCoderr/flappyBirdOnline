@@ -244,13 +244,20 @@ io.sockets.on('connection', function (socket) {
 			return;
 		}
 		socket.emit("start_party");
-		let party = new Party(socket.player);
+		let player = socket.player;
+		let party = new Party(player);
 		party.canPlay = true;
 		party.started = true;
 		parties.push(party);
-		socket.player.setParty(party);
+		player.setParty(party);
 		socket.emit("display_life", socket.player.life);
-		party.spawnEntitie(config.width/5,config.height/2,"player",1);
+		party.spawnEntitie(config.width/5,config.height/2,"player",1, {
+			player: player,
+			color: (player.pseudo !== player.party.admin.pseudo) ? Helpers.generateVariantColorFromBase(config.baseColorOfPlayer) : "#ffff00",
+			toExecuteWhenStopped: (entity) => {
+				party.releaseBird(entity.player)
+			}
+		});
 		party.writeBorder();
 		socket.player.setEntity(party.entities[1]);
 		party.entities[1].player = socket.player;
@@ -262,13 +269,6 @@ io.sockets.on('connection', function (socket) {
 			return;
 		}
 		socket.player.party.flyBird(socket.player);
-	});
-
-	socket.on("release_bird", function () {
-		if (typeof(socket.player) == "undefined" || socket.player.party == null) {
-			return;
-		}
-		socket.player.party.releaseBird(socket.player);
 	});
 });
 

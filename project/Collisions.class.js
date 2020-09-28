@@ -2,8 +2,9 @@ const collisions = {
     player: {
         bord: function (player,bord,party) {
             if (bord.pos === "haut") {
+                party.teleportEntitieTo(player.id,player.x,player.y+2);
+                party.releaseBird(player.player);
                 setTimeout(() => {
-                    party.teleportEntitieTo(player.id,player.x,player.y+2);
                     party.writeBorder(bord.pos);
                 }, 100);
                 return {action: "stopEntity"};

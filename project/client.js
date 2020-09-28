@@ -117,9 +117,11 @@ function join_party(admin_of_party) {
 
 // On click buttons
 
-onclick("login_button", function () {
+function onConnect() {
 	socket.emit("login", document.getElementById("pseudo_input").value);
-});
+}
+
+onclick("login_button", onConnect);
 
 onclick("single_party_button", function () {
 	socket.emit("single_party");
@@ -170,17 +172,14 @@ onclick("quit_party_button", function () {
 
 document.onkeydown = function (event){
 	switch (event.keyCode) {
+		case 13: // enter
+			if (document.getElementById("login").style.display !== "none") {
+				onConnect();
+			}
+			break;
 		case 32: // espace
 			event.preventDefault()
 			socket.emit("fly_bird");
-	}
-};
-
-document.onkeyup = function (event){
-	switch (event.keyCode) {
-		case 32: // espace
-			event.preventDefault()
-			socket.emit("release_bird");
 	}
 };
 

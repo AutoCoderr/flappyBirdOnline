@@ -16,7 +16,7 @@ const paramsEntities = {
 	player: {
 		w: 7/diffAire,
 		h: 7/diffAire,
-		radius: 3/diffAire,
+		radius: 2.5/diffAire,
 		color: config.baseColorOfPlayer
 	},
 	pipe: {
@@ -276,12 +276,12 @@ class Party {
 		if (player.entity == null) {
 			return;
 		}
-		if (this.canPlay && player.deplace !== "flying" && this.started) {
+		if (this.canPlay && this.started) {
 			player.deplace = "flying";
 			const entity = player.entity;
 			this.stopEntitie(entity.id);
 			entity.toDisplay = "toUp";
-			this.moveEntitieTo(entity.id, entity.x,0,15*diffAire);
+			this.moveEntitieTo(entity.id, entity.x, Math.max(entity.y-40, 0),15*diffAire);
 			if (this.firstStart) {
 				player.socket.emit("remove_msgs");
 				player.pipePassed = 0;
@@ -299,7 +299,7 @@ class Party {
 		if (player.entity == null) {
 			return;
 		}
-		if (this.canPlay && player.deplace !== "falling" && this.started) {
+		if (this.canPlay && player.state !== "falling" && this.started) {
 			player.deplace = "falling";
 			const entity = player.entity;
 			this.stopEntitie(entity.id);
@@ -516,10 +516,16 @@ class Party {
 		}, null, () => {
 			this.broadcastSomethings((player) => {
 				const id = this.spawnEntitie(config.width/5,(config.height/2) + config.heightPerPlayer*(this.players.length+1)/2 - nb*config.heightPerPlayer,
-					"player", null, (player.pseudo !== player.party.admin.pseudo) ? {color: Helpers.generateVariantColorFromBase(config.baseColorOfPlayer)} : null);
+					"player", null,
+					{
+						player: player,
+						color: (player.pseudo !== player.party.admin.pseudo) ? Helpers.generateVariantColorFromBase(config.baseColorOfPlayer) : "#ffff00",
+						toExecuteWhenStopped: (entity) => {
+							this.releaseBird(entity.player)
+						}
+					});
 				let entity = this.entities[id];
 				player.setEntity(entity);
-				entity.player = player;
 				nb += 1;
 			}, null, () => {
 				this.countDown();
