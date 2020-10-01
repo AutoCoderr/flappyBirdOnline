@@ -38,8 +38,8 @@ const formes = {
 				context.beginPath();
 				context.setStrokeStyle("red");
 				context.setLineWidth("1");
-				context.moveTo(entity.x + entity.w - 2, entity.y + entity.h - 7);
-				context.lineTo(entity.x + entity.w - 7, entity.y + entity.h - 7);
+				context.moveTo(entity.x + entity.w - 2, entity.y + entity.h - 5);
+				context.lineTo(entity.x + entity.w - 7, entity.y + entity.h - 5);
 				context.stroke();
 			},
 			toUp: function (id = "canvas", entity, context) {
@@ -65,8 +65,8 @@ const formes = {
 				context.beginPath();
 				context.setStrokeStyle("red");
 				context.setLineWidth("1");
-				context.moveTo(entity.x + entity.w - 0.5 / diffAire, entity.y + entity.h - 5 / diffAire);
-				context.lineTo(entity.x + entity.w - 4 / diffAire, entity.y + entity.h - 3.5 / diffAire);
+				context.moveTo(entity.x + entity.w - 0.5 / diffAire, entity.y + entity.h - 4 / diffAire);
+				context.lineTo(entity.x + entity.w - 4 / diffAire, entity.y + entity.h - 2.5 / diffAire);
 				context.stroke();
 			},
 			toDown: function (id = "canvas", entity, context) {
@@ -97,7 +97,7 @@ const formes = {
 				context.stroke();
 			}
 		}, remove: function (id = "canvas", entity, context) {
-			context.clearRect(entity.x - 2 / diffAire, entity.y - 2 / diffAire, entity.w + 3.5 / diffAire, entity.h + 3.5 / diffAire);
+			context.clearRect(entity.x - 2 / diffAire, entity.y - 2 / diffAire, entity.w + 2.5 / diffAire, entity.h + 3.5 / diffAire);
 		}
 	},
 	pipe: {
