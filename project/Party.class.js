@@ -15,10 +15,9 @@ const config = require("./config"),
 const paramsEntities = {
 	player: {
 		w: 5/diffAire,
-		h: 7/diffAire,
+		h: 6/diffAire,
 		radius: 2.5/diffAire,
-		color: config.baseColorOfPlayer,
-		toDisplay: "toUp"
+		color: config.baseColorOfPlayer
 	},
 	pipe: {
 		w: 25/diffAire,
