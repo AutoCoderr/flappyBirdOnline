@@ -519,9 +519,9 @@ class Party {
 		this.broadcastSomethings((player) => {
 			player.socket.emit("start_party");
 			player.socket.emit("display_life", player.life);
-			player.socket.emit("display_msgs", {msgs: "Appuyez sur espace pour commencer", type: "info"});
+			player.socket.emit("display_msgs", {msgs: "Appuyez sur espace pour commencer", type: "warning"});
 		}, null, () => {
-
+			this.writeBorder();
 			this.broadcastSomethings((player) => {
 				const id = this.spawnEntitie(config.width/5,(config.height/2) + config.heightPerPlayer*(this.players.length+1)/2 - nb*config.heightPerPlayer,
 					"player", null,
@@ -557,7 +557,7 @@ class Party {
 					nb += 1;
 				});
 				this.broadcastMsgs("C'est partit!!", "warning");
-				this.broadcastMsgs("Appuyez sur espace pour commencer", "info")
+				this.broadcastMsgs("Appuyez sur espace pour commencer", "warning")
 				this.canPlay = true;
 				this.firstStart = true;
 
