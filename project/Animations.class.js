@@ -95,7 +95,7 @@ class Animations {
 
         entity.params = params;
 
-        this.deplaceRec(xA, yA, xA, yA, coefX, coefY, 0, params);
+        this.deplaceRec(xA+coefX, yA+coefY, xA, yA, coefX, coefY, 0, params);
     }
 
     deplaceRec(x, y, xD, yD, coefX, coefY, i, params) {
@@ -116,13 +116,13 @@ class Animations {
         const entity = params.entity,
             limit = params.limit,
             ms = params.ms;
+        let entityBefore = copyEntity(entity);
 
         if (entity != null) {
             if (!entity.exist) {
                 entity.deplacing = false;
                 return;
             }
-
             entity.x = x;
             entity.y = y;
             let collision = this.party.checkCollisions(entity);
@@ -184,7 +184,7 @@ class Animations {
                 entity.toExecuteOnDeplacement(entity);
             }
         }
-        this.graphismes.display(entity);
+        this.graphismes.hideAndDisplay(entityBefore,entity);
         if (i >= limit) {
             entity.coefX = 0;
             entity.coefY = 0;
@@ -195,7 +195,6 @@ class Animations {
             return;
         }
         entity.timeout = setTimeout(() => {
-            this.graphismes.hide(entity);
             x += coefX;
             y += coefY;
             this.deplaceRec(x, y, xD, yD, coefX, coefY, i + 1, params);
@@ -212,6 +211,16 @@ function calculdirection(x, y, coefX, coefY) {
 
 function calculDistance(xA,yA,xB,yB) {
     return Math.sqrt((xA-xB)**2+(yA-yB)**2);
+}
+
+function copyEntity(entity) {
+    let copy = {};
+    for (let key in entity) {
+        if (typeof(entity[key]) != "object") {
+            copy[key] = entity[key];
+        }
+    }
+    return copy;
 }
 
 module.exports = Animations;

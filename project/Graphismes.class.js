@@ -97,7 +97,7 @@ const formes = {
 				context.stroke();
 			}
 		}, remove: function (id = "canvas", entity, context) {
-			context.clearRect(entity.x - 2 / diffAire, entity.y - 2 / diffAire, entity.w + 4 / diffAire, entity.h + 4 / diffAire);
+			context.clearRect(entity.x - 2 / diffAire, entity.y - 2 / diffAire, entity.w + 3.5 / diffAire, entity.h + 3.5 / diffAire);
 		}
 	},
 	pipe: {
@@ -117,7 +117,7 @@ const formes = {
 				context.stroke();
 			}
 		}, remove: function (id = "canvas", entity, context) {
-			context.clearRect(entity.x - 3, entity.y - 1, entity.w + 6, entity.h + 2);
+			context.clearRect(entity.x - 3, entity.y - 1, entity.w + 8, entity.h + 2);
 		}
 	},
 	pipeUpsideDown: {
@@ -137,7 +137,7 @@ const formes = {
 			}
 		},
 		remove: function (id = "canvas", entity, context) {
-			context.clearRect(entity.x - 3, entity.y - 1, entity.w + 6, entity.h + 2);
+			context.clearRect(entity.x - 3, entity.y - 1, entity.w + 8, entity.h + 2);
 		}
 	},
 	pipeDetector: {
@@ -176,6 +176,13 @@ class Graphismes {
 	hide(entity) {
 		let generateCanvasInstructions = new GenerateCanvasInstruction();
 		formes[entity.type].remove("canvas", entity, generateCanvasInstructions);
+		this.party.broadcastCanvas(generateCanvasInstructions.instructions);
+	}
+
+	hideAndDisplay(entityBefore,entityAfter) {
+		let generateCanvasInstructions = new GenerateCanvasInstruction();
+		formes[entityBefore.type].remove("canvas", entityBefore, generateCanvasInstructions);
+		formes[entityAfter.type].display[entityAfter.toDisplay]("canvas", entityAfter, generateCanvasInstructions);
 		this.party.broadcastCanvas(generateCanvasInstructions.instructions);
 	}
 
