@@ -211,6 +211,12 @@ class Party {
 		entity.deplacing = false;
 	}
 
+	stopAllEntities() {
+		for (let id in this.entities) {
+			this.stopEntitie(id);
+		}
+	}
+
 	teleportEntitieTo(id,x,y) {
 		if (typeof(this.entities[id]) == "undefined") {
 			console.log("Entity not found");
@@ -286,7 +292,7 @@ class Party {
 			entity.toDisplay = "toUp";
 			this.moveEntitieTo(entity.id, entity.x, Math.max(entity.y-40, 0),15*diffAire);
 			if (this.firstStart) {
-				player.socket.emit("remove_msgs");
+				this.broadcastRemoveMsgs();
 				player.pipePassed = 0;
 				player.socket.emit("display_pipes_passed", player.pipePassed);
 				this.broadcastSomethings((aPlayer) => {
@@ -447,7 +453,7 @@ class Party {
 		player.socket.emit("display_life", player.life);
 		clearInterval(this.timeoutPutTuyaux);
 		this.timeoutPutTuyaux = null;
-		this.stopAllPipes();
+		this.stopAllEntities();
 		if (player.life > 0) {
 			player.socket.emit("display_msgs", {type: "warning", msgs: "Vous avez perdu une vie"});
 			this.broadcastMsgs(player.pseudo+" a perdu une vie", "warning", player);
@@ -513,8 +519,9 @@ class Party {
 		this.broadcastSomethings((player) => {
 			player.socket.emit("start_party");
 			player.socket.emit("display_life", player.life);
-			player.socket.emit("remove_msgs");
+			player.socket.emit("display_msgs", {msgs: "Appuyez sur espace pour commencer", type: "info"});
 		}, null, () => {
+
 			this.broadcastSomethings((player) => {
 				const id = this.spawnEntitie(config.width/5,(config.height/2) + config.heightPerPlayer*(this.players.length+1)/2 - nb*config.heightPerPlayer,
 					"player", null,
@@ -528,8 +535,10 @@ class Party {
 				let entity = this.entities[id];
 				player.setEntity(entity);
 				nb += 1;
-			}, null, () => {
-				this.countDown();
+			},
+				null, () => {
+					this.canPlay = true;
+					this.firstStart = true;
 			});
 		});
 	}
@@ -537,7 +546,7 @@ class Party {
 	countDown(sec = 3) {
 		this.intervalCountDown = setInterval(() => {
 			if (sec > 0) {
-				this.broadcastMsgs("Commencement dans "+sec+" secondes", "warning");
+				this.broadcastMsgs("Recommencement dans "+sec+" secondes", "warning");
 			} else {
 				this.deleteAllPipes();
 				this.writeBorder();
@@ -548,6 +557,7 @@ class Party {
 					nb += 1;
 				});
 				this.broadcastMsgs("C'est partit!!", "warning");
+				this.broadcastMsgs("Appuyez sur espace pour commencer", "info")
 				this.canPlay = true;
 				this.firstStart = true;
 
@@ -565,14 +575,6 @@ class Party {
 		for (let id in this.entities) {
 			if (this.entities[id].type === "pipe" || this.entities[id].type === "pipeUpsideDown" || this.entities[id].type === "pipeDetector") {
 				this.removeEntitie(id);
-			}
-		}
-	}
-
-	stopAllPipes() {
-		for (let id in this.entities) {
-			if (this.entities[id].type === "pipe" || this.entities[id].type === "pipeUpsideDown" || this.entities[id].type === "pipeDetector") {
-				this.stopEntitie(id);
 			}
 		}
 	}
