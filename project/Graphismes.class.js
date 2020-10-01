@@ -22,7 +22,7 @@ const formes = {
 
 				//write eye white
 				context.beginPath();
-				context.arc(entity.x + entity.w - 3.5 / diffAire, entity.y + 1 / diffAire, entity.radius / 2, 0, Math.PI * 2);
+				context.arc(entity.x + entity.w - 2 / diffAire, entity.y + 1 / diffAire, entity.radius / 2, 0, Math.PI * 2);
 				context.setFillStyle("white");
 				context.setLineWidth("0.5");
 				context.fill();
@@ -30,7 +30,7 @@ const formes = {
 
 				//write eye
 				context.beginPath();
-				context.arc(entity.x + entity.w - 3.5 / diffAire, entity.y + 1 / diffAire, entity.radius / 7, 0, Math.PI * 2);
+				context.arc(entity.x + entity.w - 2 / diffAire, entity.y + 1 / diffAire, entity.radius / 7, 0, Math.PI * 2);
 				context.setFillStyle("black");
 				context.fill();
 
@@ -38,8 +38,8 @@ const formes = {
 				context.beginPath();
 				context.setStrokeStyle("red");
 				context.setLineWidth("1");
-				context.moveTo(entity.x + entity.w - 5, entity.y + entity.h - 7);
-				context.lineTo(entity.x + entity.w - 10, entity.y + entity.h - 7);
+				context.moveTo(entity.x + entity.w - 2, entity.y + entity.h - 7);
+				context.lineTo(entity.x + entity.w - 7, entity.y + entity.h - 7);
 				context.stroke();
 			},
 			toUp: function (id = "canvas", entity, context) {
@@ -49,7 +49,7 @@ const formes = {
 
 				//write eye white
 				context.beginPath();
-				context.arc(entity.x + entity.w - 5 / diffAire, entity.y + 1 / diffAire, entity.radius / 2, 0, Math.PI * 2);
+				context.arc(entity.x + entity.w - 2.5 / diffAire, entity.y + 0.5 / diffAire, entity.radius / 2, 0, Math.PI * 2);
 				context.setFillStyle("white");
 				context.setLineWidth("0.5");
 				context.fill();
@@ -57,7 +57,7 @@ const formes = {
 
 				//write eye
 				context.beginPath();
-				context.arc(entity.x + entity.w - 5 / diffAire, entity.y + 1 / diffAire, entity.radius / 7, 0, Math.PI * 2);
+				context.arc(entity.x + entity.w - 2.5 / diffAire, entity.y + 0.5 / diffAire, entity.radius / 7, 0, Math.PI * 2);
 				context.setFillStyle("black");
 				context.fill();
 
@@ -65,7 +65,7 @@ const formes = {
 				context.beginPath();
 				context.setStrokeStyle("red");
 				context.setLineWidth("1");
-				context.moveTo(entity.x + entity.w - 2.5 / diffAire, entity.y + entity.h - 5.5 / diffAire);
+				context.moveTo(entity.x + entity.w - 0.5 / diffAire, entity.y + entity.h - 5 / diffAire);
 				context.lineTo(entity.x + entity.w - 4 / diffAire, entity.y + entity.h - 3.5 / diffAire);
 				context.stroke();
 			},
