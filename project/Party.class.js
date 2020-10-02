@@ -459,12 +459,15 @@ class Party {
 			this.countDown();
 		} else {
 			this.finished = true;
-			this.players.sort((a,b) => b.life - a.life);
-			let nb = 1;
-			this.broadcastSomethings((aPlayer) => {
-				aPlayer.socket.emit("display_msgs", {msgs: "Partie terminée, vous êtes numéro "+nb, type: "warning"});
-				nb += 1;
-			});
+			let players = [];
+			for (let i=0;i<this.players.length;i++) {
+				players.push(this.players[i]);
+			}
+			players.push(this.admin);
+			players.sort((a,b) => b.life - a.life);
+			for (let i=0;i<players.length;i++) {
+				players[i].socket.emit("display_msgs", {msgs: "Partie terminée, vous êtes numéro "+(i+1), type: "warning"});
+			}
 			this.newParty();
 		}
 		return {action: "stopAnime"};
@@ -499,6 +502,7 @@ class Party {
 					for (let i=0;i<playersToRemove.length;i++) {
 						playersToRemove[i].socket.emit("stop_party");
 						playersToRemove[i].socket.emit("remove_msgs");
+						Helpers.displayAllParties(playersToRemove[i].socket);
 						this.removePlayer(playersToRemove[i]);
 					}
 					this.startParty();

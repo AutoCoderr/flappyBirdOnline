@@ -6,9 +6,6 @@ const Party = require("./Party.class"),
 	Player = require("./Player.class"),
 	Helpers = require("./Helpers.class");
 
-let players = {};
-let parties = [];
-
 const extension_per_mime = {
 	"text/css": ["css"],
 	"text/html": ["html","htm"],
@@ -104,12 +101,12 @@ io.sockets.on('connection', function (socket) {
 		}
 		if (pseudo === "") {
 			pseudo = "user"+Helpers.rand(10**3,10**4);
-			while (typeof(players[pseudo]) != "undefined") {
+			while (typeof(Helpers.players[pseudo]) != "undefined") {
 				pseudo = "user"+Helpers.rand(10**3,10**4);
 			}
 		}
 		let nb = "";
-		while (typeof(players[pseudo+nb]) != "undefined") {
+		while (typeof(Helpers.players[pseudo+nb]) != "undefined") {
 			if (nb === "") {
 				nb = 2;
 			} else {
@@ -118,7 +115,7 @@ io.sockets.on('connection', function (socket) {
 		}
 		let player = new Player(socket);
 		player.setPseudo(pseudo+nb);
-		players[pseudo+nb] = player;
+		Helpers.players[pseudo+nb] = player;
 		socket.player = player;
 		socket.emit("login_successfull", config);
 		socket.emit("remove_msgs");
@@ -127,15 +124,15 @@ io.sockets.on('connection', function (socket) {
 	socket.on('disconnect',function(){
 		if (typeof(socket.player) != "undefined") {
 			if (socket.player.party != null) {
-				quitParty(socket);
+				Helpers.quitParty(socket);
 			}
-			delete players[socket.player.pseudo];
+			delete Helpers.players[socket.player.pseudo];
 		}
 	});
 
 	socket.on("quit_party", function () {
 		if (typeof(socket.player) != "undefined" && socket.player.party != null) {
-			quitParty(socket);
+			Helpers.quitParty(socket);
 			socket.emit("remove_msgs");
 		}
 	});
@@ -145,10 +142,10 @@ io.sockets.on('connection', function (socket) {
 			return;
 		}
 		let party = new Party(socket.player);
-		parties.push(party);
+		Helpers.parties.push(party);
 		socket.player.party = party;
 		socket.emit("display_party_players", {admin: socket.player.pseudo, players: []});
-		displayAllParties(socket.broadcast);
+		Helpers.displayAllParties(socket.broadcast);
 		socket.emit("remove_msgs");
 	});
 
@@ -156,7 +153,7 @@ io.sockets.on('connection', function (socket) {
 		if (typeof(socket.player) == "undefined" || socket.player.party != null) {
 			return;
 		}
-		displayAllParties(socket);
+		Helpers.displayAllParties(socket);
 		socket.emit("remove_msgs");
 	});
 
@@ -164,31 +161,31 @@ io.sockets.on('connection', function (socket) {
 		if (typeof(socket.player) == "undefined" || socket.player.party != null) {
 			return;
 		}
-		if (typeof(players[adminPseudo]) == "undefined") {
+		if (typeof(Helpers.players[adminPseudo]) == "undefined") {
 			socket.emit("display_msgs", {type: "error", msgs: "L'utilisateur "+adminPseudo+" ne semble pas exister"});
 			return;
 		}
-		if (players[adminPseudo].party == null) {
+		if (Helpers.players[adminPseudo].party == null) {
 			socket.emit("display_msgs", {type: "error", msgs: "L'utilisateur "+adminPseudo+" ne semble pas avoir créé de partie"});
 			return;
 		}
-		if (players[adminPseudo].party.started) {
+		if (Helpers.players[adminPseudo].party.started) {
 			socket.emit("display_msgs", {type: "error", msgs: "La partie est déjà en cours"});
 			return;
 		}
-		if (players[adminPseudo].party.players.length+1 === config.maxPlayerByParty) {
+		if (Helpers.players[adminPseudo].party.players.length+1 === config.maxPlayerByParty) {
 			socket.emit("display_msgs", {type: "error", msgs: "Le nombre de joeurs pour cette partie est déjà atteint"});
 			return;
 		}
 
-		let party = players[adminPseudo].party;
+		let party = Helpers.players[adminPseudo].party;
 		party.addPlayer(socket.player);
 		let party_players = party.getPseudoList();
 		socket.player.party = party;
 		party.broadcastSomethings((player) => {
 			player.socket.emit("display_party_players", {admin: party.admin.pseudo, players: party_players});
 		});
-		displayAllParties(socket.broadcast);
+		Helpers.displayAllParties(socket.broadcast);
 		socket.emit("remove_msgs");
 		socket.emit("party_joined");
 	});
@@ -247,7 +244,7 @@ io.sockets.on('connection', function (socket) {
 		let player = socket.player;
 		let party = new Party(player);
 		player.setParty(party);
-		parties.push(party);
+		Helpers.parties.push(party);
 		party.startParty();
 	});
 
@@ -258,34 +255,5 @@ io.sockets.on('connection', function (socket) {
 		socket.player.party.flyBird(socket.player);
 	});
 });
-
-function removeParty(party) {
-	for (let i=0;i<parties.length;i++) {
-		if (party.admin.pseudo === parties[i].admin.pseudo) {
-			parties.splice(i,1);
-			return true;
-		}
-	}
-	return false;
-}
-
-function displayAllParties(socket) {
-	let partyList = [];
-	for (let i=0;i<parties.length;i++) {
-		if (!parties[i].started) {
-			partyList.push({admin: parties[i].admin.pseudo, nbPlayers: parties[i].players.length+1});
-		}
-	}
-	socket.emit("display_parties", partyList);
-}
-
-function quitParty(socket) {
-	if (socket.player.pseudo === socket.player.party.admin.pseudo) {
-		removeParty(socket.player.party);
-	}
-	socket.player.party.stopParty(socket.player);
-
-	displayAllParties(socket.broadcast);
-}
 
 server.listen(3005);
