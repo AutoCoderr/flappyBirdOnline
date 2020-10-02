@@ -1,4 +1,7 @@
 class Helpers {
+	static players = {};
+	static parties = [];
+
 	static generateVariantColorFromBase(base) {
 		const valueToChange = 150;
 
@@ -23,6 +26,35 @@ class Helpers {
 			num = '0'+num;
 		}
 		return num;
+	}
+
+	static removeParty(party) {
+		for (let i=0;i<Helpers.parties.length;i++) {
+			if (party.admin.pseudo === Helpers.parties[i].admin.pseudo) {
+				Helpers.parties.splice(i,1);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	static displayAllParties(socket) {
+		let partyList = [];
+		for (let i=0;i<Helpers.parties.length;i++) {
+			if (!Helpers.parties[i].started) {
+				partyList.push({admin: Helpers.parties[i].admin.pseudo, nbPlayers: Helpers.parties[i].players.length+1});
+			}
+		}
+		socket.emit("display_parties", partyList);
+	}
+
+	static quitParty(socket) {
+		if (socket.player.pseudo === socket.player.party.admin.pseudo) {
+			Helpers.removeParty(socket.player.party);
+		}
+		socket.player.party.stopParty(socket.player);
+
+		Helpers.displayAllParties(socket.broadcast);
 	}
 }
 
