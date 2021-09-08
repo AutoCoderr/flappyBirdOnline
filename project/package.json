@@ -4,11 +4,7 @@
   "description": "An online Flappy bird game using canvas",
   "main": "serv.js",
   "dependencies": {
-    "canvas": "^2.6.1",
-    "fs": "^0.0.1-security",
-    "http": "^0.0.1-security",
-    "socket.io": "^2.3.0",
-    "url": "^0.11.0"
+    "socket.io": "^2.3.0"
   },
   "devDependencies": {},
   "scripts": {

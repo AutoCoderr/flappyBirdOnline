@@ -1,5 +1,4 @@
-const { createCanvas } = require('canvas'),
-	Player = require("./Player.class"),
+const Player = require("./Player.class"),
 	Graphismes = require("./Graphismes.class"),
 	Animations = require("./Animations.class"),
 	Collisons = require("./Collisions.class"),
@@ -36,7 +35,6 @@ const paramsEntities = {
 
 class Party {
 	players;
-	canvas;
 	firstStart;
 	entities;
 	graphismes;
@@ -53,7 +51,6 @@ class Party {
 
 	constructor(admin) {
 		this.players = [];
-		this.setCanvas(createCanvas(config.width, config.height));
 		this.setAdmin(admin);
 		this.firstStart = true;
 		this.entities = {};
@@ -71,10 +68,6 @@ class Party {
 
 	setAdmin(admin) {
 		this.admin = admin;
-	}
-
-	setCanvas(canvas) {
-		this.canvas = canvas;
 	}
 
 	setPlayers(players) {
@@ -289,7 +282,7 @@ class Party {
 			const entity = player.entity;
 			this.stopEntitie(entity.id);
 			entity.toDisplay = "toUp";
-			this.moveEntitieTo(entity.id, entity.x, Math.max(entity.y-40, 0),15*diffAire);
+			this.moveEntitieTo(entity.id, entity.x, Math.max(entity.y-40, 0),7*diffAire);
 			if (this.firstStart) {
 				this.broadcastRemoveMsgs();
 				player.pipePassed = 0;
@@ -312,7 +305,7 @@ class Party {
 			const entity = player.entity;
 			this.stopEntitie(entity.id);
 			entity.toDisplay = "default";
-			this.moveEntitieTo(entity.id,entity.x,heightCanvas, 45 *diffAire, {to: 15*diffAire, before: 20});
+			this.moveEntitieTo(entity.id,entity.x,heightCanvas, 45*diffAire, {to: 7*diffAire, before: 20});
 		}
 	}
 
